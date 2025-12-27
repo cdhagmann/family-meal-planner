@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Family Meal Planner</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f5; 
+      color: #333;
+      line-height: 1.5;
+    }
+    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    h1 { text-align: center; margin-bottom: 10px; color: #2c3e50; }
+    .subtitle { text-align: center; color: #666; margin-bottom: 20px; }
+    
+    .loading { text-align: center; padding: 40px; font-size: 18px; }
+    .error { text-align: center; padding: 40px; color: #e74c3c; }
+
+    /* Rainbow tracker */
+    .rainbow-tracker {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .color-dot {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: white;
+      font-size: 16px;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+      border: 3px solid transparent;
+      cursor: pointer;
+      transition: transform 0.2s;
+      position: relative;
+    }
+    .color-dot:hover { transform: scale(1.1); }
+    .color-dot.needed { border-color: #333; box-shadow: 0 0 10px rgba(0,0,0,0.3); }
+    .color-dot.red { background: #e74c3c; }
+    .color-dot.orange_yellow { background: #f39c12; }
+    .color-dot.green { background: #27ae60; }
+    .color-dot.leafy_green { background: #1e8449; }
+    .color-dot.blue_purple { background: #8e44ad; }
+    .color-dot.white_brown { background: #95a5a6; color: #fff; }
+    .color-label {
+      position: absolute;
+      bottom: -20px;
+      font-size: 10px;
+      color: #666;
+      white-space: nowrap;
+    }
+
+    /* Filters */
+    .filters {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .filter-section { margin-bottom: 15px; }
+    .filter-section:last-child { margin-bottom: 0; }
+    .filter-section h3 { margin-bottom: 8px; font-size: 14px; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
+    .filter-options { display: flex; flex-wrap: wrap; gap: 8px; }
+    .filter-btn {
+      padding: 6px 14px;
+      border: 2px solid #ddd;
+      border-radius: 20px;
+      background: white;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.2s;
+      font-weight: 500;
+    }
+    .filter-btn:hover { border-color: #3498db; background: #ebf5fb; }
+    .filter-btn.active { background: #3498db; color: white; border-color: #3498db; }
+    
+    /* Meal type tabs */
+    .meal-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .meal-tab {
+      padding: 12px 24px;
+      border: none;
+      background: white;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      transition: all 0.2s;
+    }
+    .meal-tab:hover { background: #ebf5fb; }
+    .meal-tab.active { background: #3498db; color: white; }
+
+    /* Week plan */
+    .week-plan {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .week-plan-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .week-plan h2 { font-size: 18px; }
+    .planned-meals { display: grid; gap: 8px; }
+    .planned-meal {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 15px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      border-left: 4px solid #3498db;
+    }
+    .planned-meal.breakfast { border-left-color: #f39c12; }
+    .planned-meal.lunch { border-left-color: #27ae60; }
+    .planned-meal.dinner { border-left-color: #9b59b6; }
+    .planned-meal .meal-info { flex: 1; }
+    .planned-meal .meal-name { font-weight: 600; text-transform: capitalize; }
+    .planned-meal .meal-meta { font-size: 12px; color: #666; margin-top: 2px; }
+    .planned-meal .meal-colors { display: flex; gap: 4px; margin-top: 6px; }
+    .mini-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 1px solid rgba(0,0,0,0.1);
+    }
+    .mini-dot.red { background: #e74c3c; }
+    .mini-dot.orange_yellow { background: #f39c12; }
+    .mini-dot.green { background: #27ae60; }
+    .mini-dot.leafy_green { background: #1e8449; }
+    .mini-dot.blue_purple { background: #8e44ad; }
+    .mini-dot.white_brown { background: #95a5a6; }
+    .remove-btn {
+      background: none;
+      color: #e74c3c;
+      border: none;
+      cursor: pointer;
+      font-size: 20px;
+      padding: 5px 10px;
+      opacity: 0.6;
+      transition: opacity 0.2s;
+    }
+    .remove-btn:hover { opacity: 1; }
+
+    /* Meal grid */
+    .meals-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 15px;
+    }
+    .meal-card {
+      background: white;
+      border-radius: 10px;
+      padding: 18px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 2px solid transparent;
+    }
+    .meal-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+    .meal-card.selected { border-color: #3498db; background: #ebf5fb; }
+    .meal-card.recommended { border-color: #27ae60; }
+    .meal-card h3 { font-size: 16px; margin-bottom: 10px; text-transform: capitalize; }
+    .meal-card .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .meal-card .tag {
+      font-size: 11px;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-weight: 500;
+    }
+    .meal-card .tag.protein { background: #fadbd8; color: #922b21; }
+    .meal-card .tag.cuisine { background: #d5f5e3; color: #1e8449; }
+    .meal-card .tag.format { background: #d6eaf8; color: #21618c; }
+    .meal-card .tag.meal_type { background: #f5eef8; color: #6c3483; }
+    .meal-card .colors { display: flex; gap: 4px; margin-top: 10px; }
+    .meal-card .flags { font-size: 12px; margin-top: 10px; line-height: 1.4; }
+    .meal-card .red-flag { color: #c0392b; }
+    .meal-card .green-flag { color: #27ae60; }
+
+    /* Stats */
+    .stats {
+      text-align: center;
+      padding: 12px;
+      background: white;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    /* Action buttons */
+    .action-btns {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .action-btn {
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      border: none;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .action-btn:hover { opacity: 0.9; }
+    .action-btn.primary { background: #3498db; color: white; }
+    .action-btn.danger { background: #e74c3c; color: white; }
+    .action-btn.secondary { background: #ecf0f1; color: #333; }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 30px;
+      color: #999;
+      font-style: italic;
+    }
+
+    /* Color filter pills */
+    .color-filter {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      border: 2px solid #ddd;
+      background: white;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+    .color-filter:hover { border-color: #333; }
+    .color-filter.active { border-color: #333; background: #f8f9fa; }
+    .color-filter .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    @media (max-width: 600px) {
+      .container { padding: 10px; }
+      .meals-grid { grid-template-columns: 1fr; }
+      .color-dot { width: 40px; height: 40px; font-size: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🌈 Family Meal Planner</h1>
+    <p class="subtitle">Plan your week, eat the rainbow</p>
+
+    <div id="app">
+      <div class="loading">Loading meals from Google Sheets...</div>
+    </div>
+  </div>
+
+  <script>
+    // Google Sheets CSV URL - update this with your published sheet URL
+    const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSI1SbacmBCYeZLc717wSxtvJ9MgirIp97I58FGtX3V3YHQ1gnZhyUvp7c3PMvhXaUv6J73LW8spsDi/pub?output=csv';
+
+    // App state
+    let meals = [];
+    let plannedMeals = JSON.parse(localStorage.getItem('plannedMeals') || '[]');
+    let filters = {
+      mealType: 'all',
+      proteins: [],
+      cuisines: [],
+      colorsNeeded: []
+    };
+
+    const COLOR_NAMES = {
+      red: 'Red',
+      orange_yellow: 'Orange/Yellow', 
+      green: 'Green',
+      leafy_green: 'Leafy Green',
+      blue_purple: 'Blue/Purple',
+      white_brown: 'White/Brown'
+    };
+
+    // Load data from Google Sheets
+    async function loadMeals() {
+      try {
+        const response = await fetch(SHEET_URL);
+        const csvText = await response.text();
+        
+        Papa.parse(csvText, {
+          header: true,
+          skipEmptyLines: true,
+          complete: function(results) {
+            meals = results.data.map(row => ({
+              name: row.name || '',
+              protein: row.protein || 'unknown',
+              cuisine: row.cuisine || 'unknown',
+              format: row.format || 'unknown',
+              meal_type: row.meal_type || 'unknown',
+              red_flags: row.red_flags || '',
+              green_flags: row.green_flags || '',
+              colors: {
+                red: row.red === 'TRUE',
+                orange_yellow: row.orange_yellow === 'TRUE',
+                green: row.green === 'TRUE',
+                leafy_green: row.leafy_green === 'TRUE',
+                blue_purple: row.blue_purple === 'TRUE',
+                white_brown: row.white_brown === 'TRUE'
+              },
+              vegetables: row.vegetables || ''
+            })).filter(m => m.name); // Filter out empty rows
+            
+            console.log(`Loaded ${meals.length} meals`);
+            render();
+          },
+          error: function(error) {
+            showError('Failed to parse meal data: ' + error.message);
+          }
+        });
+      } catch (error) {
+        showError('Failed to load meals: ' + error.message);
+      }
+    }
+
+    function showError(message) {
+      document.getElementById('app').innerHTML = `
+        <div class="error">
+          <p>${message}</p>
+          <p style="margin-top: 10px; font-size: 14px;">Make sure the Google Sheet is published to web.</p>
+        </div>
+      `;
+    }
+
+    // Get unique values for filters
+    function getUniqueValues(key) {
+      return [...new Set(meals.map(m => m[key]).filter(v => v && v !== 'unknown'))].sort();
+    }
+
+    // Calculate color counts from planned meals
+    function getColorCounts() {
+      const counts = { red: 0, orange_yellow: 0, green: 0, leafy_green: 0, blue_purple: 0, white_brown: 0 };
+      plannedMeals.forEach(meal => {
+        Object.keys(counts).forEach(color => {
+          if (meal.colors[color]) counts[color]++;
+        });
+      });
+      return counts;
+    }
+
+    // Filter meals based on current filters
+    function getFilteredMeals() {
+      return meals.filter(meal => {
+        // Meal type filter
+        if (filters.mealType !== 'all' && meal.meal_type !== filters.mealType) return false;
+        
+        // Protein filter
+        if (filters.proteins.length > 0 && !filters.proteins.includes(meal.protein)) return false;
+        
+        // Cuisine filter
+        if (filters.cuisines.length > 0 && !filters.cuisines.includes(meal.cuisine)) return false;
+        
+        // Colors needed filter - show meals that have ANY of the needed colors
+        if (filters.colorsNeeded.length > 0) {
+          const hasNeededColor = filters.colorsNeeded.some(color => meal.colors[color]);
+          if (!hasNeededColor) return false;
+        }
+        
+        return true;
+      });
+    }
+
+    // Sort meals - recommended ones first (ones with needed colors)
+    function sortMeals(filteredMeals) {
+      if (filters.colorsNeeded.length === 0) return filteredMeals;
+      
+      return [...filteredMeals].sort((a, b) => {
+        const aScore = filters.colorsNeeded.filter(c => a.colors[c]).length;
+        const bScore = filters.colorsNeeded.filter(c => b.colors[c]).length;
+        return bScore - aScore;
+      });
+    }
+
+    // Toggle filter
+    function toggleFilter(type, value) {
+      const arr = filters[type];
+      const idx = arr.indexOf(value);
+      if (idx === -1) {
+        arr.push(value);
+      } else {
+        arr.splice(idx, 1);
+      }
+      render();
+    }
+
+    // Set meal type
+    function setMealType(type) {
+      filters.mealType = type;
+      render();
+    }
+
+    // Add meal to plan
+    function addMeal(meal) {
+      if (!plannedMeals.find(m => m.name === meal.name)) {
+        plannedMeals.push(meal);
+        savePlan();
+        render();
+      }
+    }
+
+    // Remove meal from plan
+    function removeMeal(index) {
+      plannedMeals.splice(index, 1);
+      savePlan();
+      render();
+    }
+
+    // Clear plan
+    function clearPlan() {
+      if (confirm('Clear all planned meals?')) {
+        plannedMeals = [];
+        savePlan();
+        render();
+      }
+    }
+
+    // Clear filters
+    function clearFilters() {
+      filters = { mealType: 'all', proteins: [], cuisines: [], colorsNeeded: [] };
+      render();
+    }
+
+    // Save to localStorage
+    function savePlan() {
+      localStorage.setItem('plannedMeals', JSON.stringify(plannedMeals));
+    }
+
+    // Render the app
+    function render() {
+      const colorCounts = getColorCounts();
+      const filteredMeals = sortMeals(getFilteredMeals());
+      const proteins = getUniqueValues('protein');
+      const cuisines = getUniqueValues('cuisine');
+
+      document.getElementById('app').innerHTML = `
+        <!-- Rainbow Tracker -->
+        <div class="rainbow-tracker">
+          ${Object.entries(COLOR_NAMES).map(([key, label]) => `
+            <div class="color-dot ${key} ${filters.colorsNeeded.includes(key) ? 'needed' : ''}" 
+                 onclick="toggleFilter('colorsNeeded', '${key}')"
+                 title="${label} - Click to filter for meals with this color">
+              ${colorCounts[key]}
+              <span class="color-label">${label.split('/')[0]}</span>
+            </div>
+          `).join('')}
+        </div>
+
+        <!-- Meal Type Tabs -->
+        <div class="meal-tabs">
+          ${['all', 'breakfast', 'lunch', 'dinner'].map(type => `
+            <button class="meal-tab ${filters.mealType === type ? 'active' : ''}" 
+                    onclick="setMealType('${type}')">
+              ${type === 'all' ? 'All Meals' : type === 'lunch' ? 'Lunch (involved)' : type === 'dinner' ? 'Dinner (easy)' : 'Breakfast'}
+            </button>
+          `).join('')}
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+          <div class="filter-section">
+            <h3>Protein</h3>
+            <div class="filter-options">
+              ${proteins.map(p => `
+                <button class="filter-btn ${filters.proteins.includes(p) ? 'active' : ''}"
+                        onclick="toggleFilter('proteins', '${p}')">
+                  ${p}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+          <div class="filter-section">
+            <h3>Cuisine</h3>
+            <div class="filter-options">
+              ${cuisines.map(c => `
+                <button class="filter-btn ${filters.cuisines.includes(c) ? 'active' : ''}"
+                        onclick="toggleFilter('cuisines', '${c}')">
+                  ${c}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats">
+          Showing <strong>${filteredMeals.length}</strong> of ${meals.length} meals
+          ${filters.colorsNeeded.length > 0 ? ` • Filtering for: ${filters.colorsNeeded.map(c => COLOR_NAMES[c]).join(', ')}` : ''}
+        </div>
+
+        <!-- Week Plan -->
+        <div class="week-plan">
+          <div class="week-plan-header">
+            <h2>📅 This Week's Plan (${plannedMeals.length} meals)</h2>
+            <div class="action-btns">
+              <button class="action-btn secondary" onclick="clearFilters()">Clear Filters</button>
+              <button class="action-btn danger" onclick="clearPlan()">Clear Plan</button>
+            </div>
+          </div>
+          <div class="planned-meals">
+            ${plannedMeals.length === 0 ? 
+              '<div class="empty-state">Click meals below to add them to your plan</div>' :
+              plannedMeals.map((meal, i) => `
+                <div class="planned-meal ${meal.meal_type}">
+                  <div class="meal-info">
+                    <div class="meal-name">${meal.name}</div>
+                    <div class="meal-meta">${meal.meal_type} • ${meal.protein} • ${meal.cuisine}</div>
+                    <div class="meal-colors">
+                      ${Object.entries(meal.colors).filter(([_, v]) => v).map(([color]) => 
+                        `<div class="mini-dot ${color}" title="${COLOR_NAMES[color]}"></div>`
+                      ).join('')}
+                    </div>
+                  </div>
+                  <button class="remove-btn" onclick="removeMeal(${i})" title="Remove">×</button>
+                </div>
+              `).join('')
+            }
+          </div>
+        </div>
+
+        <!-- Meals Grid -->
+        <div class="meals-grid">
+          ${filteredMeals.map(meal => {
+            const isPlanned = plannedMeals.find(m => m.name === meal.name);
+            const neededColorCount = filters.colorsNeeded.filter(c => meal.colors[c]).length;
+            const isRecommended = neededColorCount > 0;
+            return `
+              <div class="meal-card ${isPlanned ? 'selected' : ''} ${isRecommended ? 'recommended' : ''}" 
+                   onclick="addMeal(${JSON.stringify(meal).replace(/"/g, '&quot;')})">
+                <h3>${meal.name}</h3>
+                <div class="meta">
+                  <span class="tag protein">${meal.protein}</span>
+                  <span class="tag cuisine">${meal.cuisine}</span>
+                  <span class="tag format">${meal.format}</span>
+                  <span class="tag meal_type">${meal.meal_type}</span>
+                </div>
+                <div class="colors">
+                  ${Object.entries(meal.colors).filter(([_, v]) => v).map(([color]) => 
+                    `<div class="mini-dot ${color}" title="${COLOR_NAMES[color]}"></div>`
+                  ).join('')}
+                </div>
+                ${meal.red_flags || meal.green_flags ? `
+                  <div class="flags">
+                    ${meal.red_flags ? `<span class="red-flag">⚠️ ${meal.red_flags}</span>` : ''}
+                    ${meal.green_flags ? `<span class="green-flag">✓ ${meal.green_flags}</span>` : ''}
+                  </div>
+                ` : ''}
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    // Initialize
+    loadMeals();
+  </script>
+</body>
+</html>
