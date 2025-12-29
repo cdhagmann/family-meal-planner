@@ -1,32 +1,14 @@
-// Configuration
-const CONFIG = {
-  SHEET_URL: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSI1SbacmBCYeZLc717wSxtvJ9MgirIp97I58FGtX3V3YHQ1gnZhyUvp7c3PMvhXaUv6J73LW8spsDi/pub?output=csv',
-  COLOR_MAPPING_URL: 'color_mapping.json',
-  STORAGE_KEY: 'weekPlan'
-};
-
-const COLOR_NAMES = {
-  red: 'Red',
-  orange_yellow: 'Orange/Yellow', 
-  green: 'Green',
-  leafy_green: 'Leafy Green',
-  blue_purple: 'Blue/Purple',
-  white_brown: 'White/Brown'
-};
-
-const MEAL_SLOTS = ['breakfast', 'lunch', 'dinner'];
-const NUM_DAYS = 7;
-
-// App state
-let colorMapping = {};
+// ============ App State ============
 let meals = [];
+let inventory = {};  // Map: ingredient -> {category, location, quantity, expires_soon}
 let weekPlan = loadWeekPlan();
-let selectedSlot = null; // { day: 0-6, slot: 'breakfast'|'lunch'|'dinner' }
+let selectedSlot = null;
 let filters = {
   mealType: 'all',
   proteins: [],
   cuisines: [],
-  colorsNeeded: []
+  colorsNeeded: [],
+  expiringOnly: false,
 };
 
 // ============ Week Plan Management ============
@@ -34,21 +16,16 @@ let filters = {
 function createEmptyWeekPlan() {
   const plan = [];
   for (let day = 0; day < NUM_DAYS; day++) {
-    plan.push({
-      breakfast: null,
-      lunch: null,
-      dinner: null
-    });
+    plan.push({ breakfast: null, lunch: null, dinner: null });
   }
   return plan;
 }
 
 function loadWeekPlan() {
   try {
-    const saved = localStorage.getItem(CONFIG.STORAGE_KEY);
+    const saved = localStorage.getItem(CONFIG.STORAGE.weekPlan);
     if (saved) {
       const parsed = JSON.parse(saved);
-      // Validate structure
       if (Array.isArray(parsed) && parsed.length === NUM_DAYS) {
         return parsed;
       }
@@ -60,84 +37,184 @@ function loadWeekPlan() {
 }
 
 function saveWeekPlan() {
-  localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(weekPlan));
+  localStorage.setItem(CONFIG.STORAGE.weekPlan, JSON.stringify(weekPlan));
 }
 
 // ============ Data Loading ============
 
-async function loadColorMapping() {
+async function fetchCSV(url, fallbackUrl) {
   try {
-    const response = await fetch(CONFIG.COLOR_MAPPING_URL);
-    colorMapping = await response.json();
-    console.log('Color mapping loaded');
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return await response.text();
   } catch (error) {
-    console.error('Failed to load color mapping, using defaults:', error);
-    colorMapping = getDefaultColorMapping();
+    console.warn(`Failed to fetch ${url}, trying fallback...`);
+    try {
+      const fallbackResponse = await fetch(fallbackUrl);
+      if (!fallbackResponse.ok) throw new Error(`Fallback HTTP ${fallbackResponse.status}`);
+      return await fallbackResponse.text();
+    } catch (fallbackError) {
+      console.error(`Fallback also failed for ${fallbackUrl}`);
+      throw fallbackError;
+    }
   }
 }
 
-function getDefaultColorMapping() {
-  return {
-    red: ['tomato', 'tomatoes', 'red pepper'],
-    orange_yellow: ['carrot', 'carrots', 'pepper', 'peppers', 'squash', 'corn'],
-    green: ['cucumber', 'celery', 'cabbage', 'green beans', 'green_beans', 'peas', 'avocado', 'zucchini'],
-    leafy_green: ['lettuce', 'kale', 'spinach', 'broccoli', 'brussels'],
-    blue_purple: ['olive', 'olives', 'eggplant', 'blueberries', 'grapes', 'raisins'],
-    white_brown: ['cauliflower', 'mushroom', 'mushrooms', 'onion', 'onions', 'garlic', 'potato', 'potatoes']
-  };
-}
-
-async function loadMeals() {
+async function loadAllData(forceRefresh = false) {
+  // Caching disabled for now - always fetch fresh
   try {
-    const response = await fetch(CONFIG.SHEET_URL);
-    const csvText = await response.text();
+    document.getElementById('app').innerHTML = '<div class="loading">Loading data...</div>';
     
-    Papa.parse(csvText, {
+    // Fetch both CSVs in parallel
+    const [mealsCSV, inventoryCSV] = await Promise.all([
+      fetchCSV(CONFIG.SHEETS.meals, CONFIG.FALLBACK.meals),
+      fetchCSV(CONFIG.SHEETS.inventory, CONFIG.FALLBACK.inventory),
+    ]);
+
+    // Parse meals (now includes ingredients column)
+    Papa.parse(mealsCSV, {
       header: true,
       skipEmptyLines: true,
-      complete: function(results) {
+      complete: (results) => {
         meals = results.data
-          .map(row => parseMealRow(row))
-          .filter(m => m.name);
-        
-        // Recalculate colors for meals in week plan
-        weekPlan = weekPlan.map(day => ({
-          breakfast: day.breakfast ? { ...day.breakfast, colors: calculateColors(day.breakfast.vegetables || '') } : null,
-          lunch: day.lunch ? { ...day.lunch, colors: calculateColors(day.lunch.vegetables || '') } : null,
-          dinner: day.dinner ? { ...day.dinner, colors: calculateColors(day.dinner.vegetables || '') } : null
-        }));
-        saveWeekPlan();
-        
-        console.log(`Loaded ${meals.length} meals`);
-        render();
-      },
-      error: function(error) {
-        showError('Failed to parse meal data: ' + error.message);
+          .filter(row => row.name && row.name.trim())
+          .map(row => ({
+            name: row.name.trim(),
+            cuisine: row.cuisine || '',
+            format: row.format || '',
+            meal_type: row.meal_type || '',
+            red_flags: row.red_flags || '',
+            green_flags: row.green_flags || '',
+            // Parse comma-separated ingredients into array
+            ingredients: parseIngredients(row.ingredients || '')
+          }));
       }
     });
+
+    // Parse inventory
+    Papa.parse(inventoryCSV, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (results) => {
+        inventory = {};
+        results.data.forEach(row => {
+          if (row.name) {
+            inventory[row.name.trim().toLowerCase()] = {
+              category: row.category || 'pantry',
+              location: row.location || 'pantry',
+              quantity: parseInt(row.quantity) || 0,
+              expires_soon: row.expires_soon === 'TRUE' || row.expires_soon === 'true'
+            };
+          }
+        });
+      }
+    });
+
+    // Save to cache
+    saveToCache();
+    
+    console.log(`Loaded: ${meals.length} meals, ${Object.keys(inventory).length} inventory items`);
+    render();
+    
   } catch (error) {
-    showError('Failed to load meals: ' + error.message);
+    showError('Failed to load data: ' + error.message);
   }
 }
 
-function parseMealRow(row) {
-  const vegetables = row.vegetables || '';
-  return {
-    name: row.name || '',
-    protein: row.protein || 'unknown',
-    cuisine: row.cuisine || 'unknown',
-    format: row.format || 'unknown',
-    meal_type: row.meal_type || 'unknown',
-    red_flags: row.red_flags || '',
-    green_flags: row.green_flags || '',
-    vegetables: vegetables,
-    colors: calculateColors(vegetables)
-  };
+function parseIngredients(ingredientsStr) {
+  if (!ingredientsStr) return [];
+  return ingredientsStr
+    .split(',')
+    .map(i => i.trim().toLowerCase())
+    .filter(i => i.length > 0);
 }
 
-// ============ Color Calculation ============
+// Cache version - increment when data structure changes
+const CACHE_VERSION = 2;
 
-function calculateColors(vegetablesStr) {
+function saveToCache() {
+  const data = { 
+    version: CACHE_VERSION,
+    meals, 
+    inventory 
+  };
+  localStorage.setItem(CONFIG.STORAGE.cachedData, JSON.stringify(data));
+  localStorage.setItem(CONFIG.STORAGE.cacheTimestamp, Date.now().toString());
+}
+
+function loadFromCache() {
+  try {
+    const timestamp = localStorage.getItem(CONFIG.STORAGE.cacheTimestamp);
+    if (!timestamp) return null;
+    
+    const age = Date.now() - parseInt(timestamp);
+    if (age > CONFIG.CACHE_DURATION) {
+      console.log('Cache expired');
+      return null;
+    }
+    
+    const dataStr = localStorage.getItem(CONFIG.STORAGE.cachedData);
+    if (!dataStr) return null;
+    
+    const data = JSON.parse(dataStr);
+    
+    // Validate cache version
+    if (data.version !== CACHE_VERSION) {
+      console.log('Cache version mismatch, invalidating');
+      clearCache();
+      return null;
+    }
+    
+    // Validate data structure
+    if (!Array.isArray(data.meals) || data.meals.length === 0) {
+      console.log('Invalid cache: meals missing or empty');
+      clearCache();
+      return null;
+    }
+    
+    // Check that meals have ingredients array (new structure)
+    if (!data.meals[0].hasOwnProperty('ingredients')) {
+      console.log('Invalid cache: old data structure detected');
+      clearCache();
+      return null;
+    }
+    
+    if (typeof data.inventory !== 'object') {
+      console.log('Invalid cache: inventory missing');
+      clearCache();
+      return null;
+    }
+    
+    return data;
+  } catch (e) {
+    console.error('Cache load error:', e);
+    clearCache();
+    return null;
+  }
+}
+
+function clearCache() {
+  localStorage.removeItem(CONFIG.STORAGE.cachedData);
+  localStorage.removeItem(CONFIG.STORAGE.cacheTimestamp);
+}
+
+function refreshData() {
+  clearCache();
+  loadAllData(true);
+}
+
+// ============ Ingredient & Meal Calculations ============
+
+function getMealIngredients(mealName) {
+  const meal = meals.find(m => m.name === mealName);
+  return meal ? meal.ingredients : [];
+}
+
+function getIngredientInfo(ingredientName) {
+  return inventory[ingredientName.toLowerCase()] || { category: 'pantry', location: 'pantry', quantity: 0, expires_soon: false };
+}
+
+function getMealColors(mealName) {
   const colors = {
     red: false,
     orange_yellow: false,
@@ -147,21 +224,50 @@ function calculateColors(vegetablesStr) {
     white_brown: false
   };
   
-  if (!vegetablesStr) return colors;
-  
-  const veggiesLower = vegetablesStr.toLowerCase();
-  
-  for (const [color, keywords] of Object.entries(colorMapping)) {
-    for (const keyword of keywords) {
-      if (veggiesLower.includes(keyword.toLowerCase())) {
-        colors[color] = true;
-        break;
-      }
+  const ings = getMealIngredients(mealName);
+  ings.forEach(ing => {
+    const info = getIngredientInfo(ing);
+    if (PRODUCE_COLORS.includes(info.category)) {
+      colors[info.category] = true;
     }
-  }
+  });
   
   return colors;
 }
+
+function getMealProteins(mealName) {
+  const ings = getMealIngredients(mealName);
+  const proteins = [];
+  ings.forEach(ing => {
+    const info = getIngredientInfo(ing);
+    if (info.category === 'protein' && ing !== 'vegetarian') {
+      proteins.push(ing);
+    }
+  });
+  return proteins;
+}
+
+function getMealCarbs(mealName) {
+  const ings = getMealIngredients(mealName);
+  const carbs = [];
+  ings.forEach(ing => {
+    const info = getIngredientInfo(ing);
+    if (info.category === 'carb') {
+      carbs.push(ing);
+    }
+  });
+  return carbs;
+}
+
+function hasExpiringIngredients(mealName) {
+  const ings = getMealIngredients(mealName);
+  return ings.some(ing => {
+    const info = getIngredientInfo(ing);
+    return info.expires_soon && info.quantity > 0;
+  });
+}
+
+// ============ Color Counting ============
 
 function getColorCountsForDay(dayIndex) {
   const counts = { red: 0, orange_yellow: 0, green: 0, leafy_green: 0, blue_purple: 0, white_brown: 0 };
@@ -169,9 +275,10 @@ function getColorCountsForDay(dayIndex) {
   
   MEAL_SLOTS.forEach(slot => {
     const meal = day[slot];
-    if (meal && meal.colors) {
+    if (meal) {
+      const colors = getMealColors(meal.name);
       Object.keys(counts).forEach(color => {
-        if (meal.colors[color]) counts[color]++;
+        if (colors[color]) counts[color]++;
       });
     }
   });
@@ -182,14 +289,10 @@ function getColorCountsForDay(dayIndex) {
 function getColorCountsForWeek() {
   const counts = { red: 0, orange_yellow: 0, green: 0, leafy_green: 0, blue_purple: 0, white_brown: 0 };
   
-  weekPlan.forEach(day => {
-    MEAL_SLOTS.forEach(slot => {
-      const meal = day[slot];
-      if (meal && meal.colors) {
-        Object.keys(counts).forEach(color => {
-          if (meal.colors[color]) counts[color]++;
-        });
-      }
+  weekPlan.forEach((day, dayIndex) => {
+    const dayCounts = getColorCountsForDay(dayIndex);
+    Object.keys(counts).forEach(color => {
+      counts[color] += dayCounts[color];
     });
   });
   
@@ -203,41 +306,161 @@ function getMissingColorsForDay(dayIndex) {
     .map(([color]) => color);
 }
 
+// ============ Grocery List Calculation ============
+
+function calculateGroceryList() {
+  // Count ingredients needed for all planned meals
+  const needed = {};
+  
+  weekPlan.forEach(day => {
+    MEAL_SLOTS.forEach(slot => {
+      const meal = day[slot];
+      if (meal) {
+        const ings = getMealIngredients(meal.name);
+        ings.forEach(ing => {
+          // Skip vegetarian placeholder
+          if (ing === 'vegetarian') return;
+          needed[ing] = (needed[ing] || 0) + 1;
+        });
+      }
+    });
+  });
+  
+  // Subtract inventory
+  const grocery = {};
+  Object.entries(needed).forEach(([ing, count]) => {
+    const info = getIngredientInfo(ing);
+    const onHand = info.quantity || 0;
+    const toBuy = count - onHand;
+    if (toBuy > 0) {
+      grocery[ing] = toBuy;
+    }
+  });
+  
+  return grocery;
+}
+
 // ============ Filtering ============
 
-function getUniqueValues(key) {
-  return [...new Set(meals.map(m => m[key]).filter(v => v && v !== 'unknown'))].sort();
+function getUniqueProteins() {
+  const proteins = new Set();
+  meals.forEach(meal => {
+    getMealProteins(meal.name).forEach(p => proteins.add(p));
+  });
+  return [...proteins].sort();
+}
+
+function getUniqueCuisines() {
+  const cuisines = new Set();
+  meals.forEach(meal => {
+    if (meal.cuisine && meal.cuisine !== 'unknown') {
+      cuisines.add(meal.cuisine);
+    }
+  });
+  return [...cuisines].sort();
 }
 
 function getFilteredMeals() {
   return meals.filter(meal => {
+    // Meal type filter
     if (filters.mealType !== 'all' && meal.meal_type !== filters.mealType) return false;
-    if (filters.proteins.length > 0 && !filters.proteins.includes(meal.protein)) return false;
-    if (filters.cuisines.length > 0 && !filters.cuisines.includes(meal.cuisine)) return false;
-    if (filters.colorsNeeded.length > 0) {
-      const hasNeededColor = filters.colorsNeeded.some(color => meal.colors[color]);
-      if (!hasNeededColor) return false;
+    
+    // Protein filter
+    if (filters.proteins.length > 0) {
+      const mealProteins = getMealProteins(meal.name);
+      if (!filters.proteins.some(p => mealProteins.includes(p))) return false;
     }
+    
+    // Cuisine filter
+    if (filters.cuisines.length > 0 && !filters.cuisines.includes(meal.cuisine)) return false;
+    
+    // Color filter
+    if (filters.colorsNeeded.length > 0) {
+      const colors = getMealColors(meal.name);
+      if (!filters.colorsNeeded.some(c => colors[c])) return false;
+    }
+    
+    // Expiring ingredients filter
+    if (filters.expiringOnly && !hasExpiringIngredients(meal.name)) return false;
+    
     return true;
   });
 }
 
 function sortMeals(filteredMeals) {
-  if (filters.colorsNeeded.length === 0) return filteredMeals;
   return [...filteredMeals].sort((a, b) => {
-    const aScore = filters.colorsNeeded.filter(c => a.colors[c]).length;
-    const bScore = filters.colorsNeeded.filter(c => b.colors[c]).length;
-    return bScore - aScore;
+    // Prioritize meals with expiring ingredients
+    const aExpiring = hasExpiringIngredients(a.name);
+    const bExpiring = hasExpiringIngredients(b.name);
+    if (aExpiring && !bExpiring) return -1;
+    if (!aExpiring && bExpiring) return 1;
+    
+    // Then by color match count if filtering by colors
+    if (filters.colorsNeeded.length > 0) {
+      const aColors = getMealColors(a.name);
+      const bColors = getMealColors(b.name);
+      const aScore = filters.colorsNeeded.filter(c => aColors[c]).length;
+      const bScore = filters.colorsNeeded.filter(c => bColors[c]).length;
+      if (bScore !== aScore) return bScore - aScore;
+    }
+    
+    return 0;
   });
+}
+
+// ============ Inventory Helpers ============
+
+function getInventoryByLocation() {
+  const byLocation = {
+    fridge: [],
+    freezer: [],
+    pantry: [],
+    counter: []
+  };
+  
+  Object.entries(inventory).forEach(([name, data]) => {
+    if (data.quantity > 0 && data.location !== 'SKIP') {
+      const location = data.location || 'pantry';
+      if (byLocation[location]) {
+        byLocation[location].push({
+          name,
+          quantity: data.quantity,
+          expires_soon: data.expires_soon,
+          category: data.category
+        });
+      }
+    }
+  });
+  
+  // Sort each location: expiring first, then alphabetically
+  Object.keys(byLocation).forEach(loc => {
+    byLocation[loc].sort((a, b) => {
+      if (a.expires_soon && !b.expires_soon) return -1;
+      if (!a.expires_soon && b.expires_soon) return 1;
+      return a.name.localeCompare(b.name);
+    });
+  });
+  
+  return byLocation;
+}
+
+function getExpiringItems() {
+  return Object.entries(inventory)
+    .filter(([name, data]) => data.expires_soon && data.quantity > 0 && data.location !== 'SKIP')
+    .map(([name, data]) => ({ name, quantity: data.quantity }));
 }
 
 // ============ User Actions ============
 
 function toggleFilter(type, value) {
-  const arr = filters[type];
-  const idx = arr.indexOf(value);
-  if (idx === -1) arr.push(value);
-  else arr.splice(idx, 1);
+  if (type === 'expiringOnly') {
+    filters.expiringOnly = !filters.expiringOnly;
+  } else {
+    const arr = filters[type];
+    const idx = arr.indexOf(value);
+    if (idx === -1) arr.push(value);
+    else arr.splice(idx, 1);
+  }
   render();
 }
 
@@ -247,14 +470,11 @@ function setMealType(type) {
 }
 
 function selectSlot(day, slot) {
-  // Toggle selection
   if (selectedSlot && selectedSlot.day === day && selectedSlot.slot === slot) {
     selectedSlot = null;
   } else {
     selectedSlot = { day, slot };
-    // Auto-filter to matching meal type
     filters.mealType = slot;
-    // Auto-filter to missing colors for that day
     filters.colorsNeeded = getMissingColorsForDay(day);
   }
   render();
@@ -264,7 +484,7 @@ function addMealToSlot(meal) {
   if (selectedSlot) {
     weekPlan[selectedSlot.day][selectedSlot.slot] = meal;
     saveWeekPlan();
-    // Move to next empty slot or clear selection
+    
     const nextSlot = findNextEmptySlot(selectedSlot.day, selectedSlot.slot);
     selectedSlot = nextSlot;
     if (nextSlot) {
@@ -278,14 +498,12 @@ function addMealToSlot(meal) {
 function findNextEmptySlot(startDay, startSlot) {
   const slotIndex = MEAL_SLOTS.indexOf(startSlot);
   
-  // First check remaining slots in same day
   for (let s = slotIndex + 1; s < MEAL_SLOTS.length; s++) {
     if (!weekPlan[startDay][MEAL_SLOTS[s]]) {
       return { day: startDay, slot: MEAL_SLOTS[s] };
     }
   }
   
-  // Then check subsequent days
   for (let d = startDay + 1; d < NUM_DAYS; d++) {
     for (let s = 0; s < MEAL_SLOTS.length; s++) {
       if (!weekPlan[d][MEAL_SLOTS[s]]) {
@@ -319,7 +537,7 @@ function clearWeek() {
 }
 
 function clearFilters() {
-  filters = { mealType: 'all', proteins: [], cuisines: [], colorsNeeded: [] };
+  filters = { mealType: 'all', proteins: [], cuisines: [], colorsNeeded: [], expiringOnly: false };
   render();
 }
 
@@ -329,16 +547,12 @@ function showError(message) {
   document.getElementById('app').innerHTML = `
     <div class="error">
       <p>${message}</p>
-      <p style="margin-top: 10px; font-size: 14px;">Make sure the Google Sheet is published to web.</p>
+      <p style="margin-top: 10px; font-size: 14px;">Check that the Google Sheets are published, or try the local fallback files.</p>
+      <button class="action-btn primary" onclick="refreshData()" style="margin-top: 15px;">Retry</button>
     </div>
   `;
 }
 
 // ============ Initialize ============
 
-async function init() {
-  await loadColorMapping();
-  await loadMeals();
-}
-
-init();
+loadAllData();

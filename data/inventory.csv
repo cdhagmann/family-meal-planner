@@ -1,0 +1,71 @@
+name,category,location,quantity,expires_soon
+artichoke,green,pantry,0,FALSE
+avocado,green,counter,2,FALSE
+bacon,protein,fridge,1,FALSE
+beef,protein,freezer,2,FALSE
+black bean,protein,pantry,3,FALSE
+blueberry,blue_purple,fridge,1,TRUE
+bread,carb,counter,1,FALSE
+broccoli,leafy_green,fridge,2,FALSE
+butter,dairy,fridge,1,FALSE
+cabbage,green,fridge,1,FALSE
+carrot,orange_yellow,fridge,4,FALSE
+cauliflower,white_brown,fridge,1,FALSE
+celery,green,fridge,1,TRUE
+cereal,carb,pantry,2,FALSE
+cheese,dairy,fridge,2,FALSE
+chicken,protein,freezer,3,FALSE
+chickpea,white_brown,pantry,2,FALSE
+corn,orange_yellow,pantry,2,FALSE
+cornbread,carb,pantry,0,FALSE
+cracker,carb,pantry,1,FALSE
+cream,dairy,fridge,0,FALSE
+cucumber,green,fridge,2,FALSE
+dumpling,carb,freezer,1,FALSE
+egg,protein,fridge,12,FALSE
+feta,dairy,fridge,1,FALSE
+fish,protein,freezer,2,FALSE
+garlic,white_brown,counter,3,FALSE
+ginger,orange_yellow,fridge,1,FALSE
+green bean,green,fridge,1,FALSE
+grits,carb,pantry,1,FALSE
+ground meat,protein,freezer,2,FALSE
+ham,protein,fridge,0,FALSE
+kale,leafy_green,fridge,1,TRUE
+kidney bean,protein,pantry,2,FALSE
+lemon,orange_yellow,counter,2,FALSE
+lentil,white_brown,pantry,1,FALSE
+lettuce,leafy_green,fridge,1,TRUE
+lime,green,counter,1,FALSE
+milk,dairy,fridge,1,FALSE
+mushroom,white_brown,fridge,1,FALSE
+naan,carb,freezer,1,FALSE
+noodle,carb,pantry,3,FALSE
+oat,carb,pantry,2,FALSE
+olive,blue_purple,pantry,1,FALSE
+onion,white_brown,counter,4,FALSE
+pasta,carb,pantry,3,FALSE
+pea,green,freezer,2,FALSE
+pepper,orange_yellow,fridge,3,FALSE
+pepperoni,protein,fridge,0,FALSE
+pita,carb,pantry,1,FALSE
+pizza dough,carb,freezer,2,FALSE
+pork,protein,freezer,1,FALSE
+potato,white_brown,counter,4,FALSE
+quinoa,carb,pantry,1,FALSE
+raisin,blue_purple,pantry,1,FALSE
+rice,carb,pantry,2,FALSE
+salmon,protein,freezer,2,FALSE
+sausage,protein,freezer,2,FALSE
+shrimp,protein,freezer,0,FALSE
+sour cream,dairy,fridge,1,FALSE
+spinach,leafy_green,fridge,1,TRUE
+squash,orange_yellow,fridge,1,FALSE
+tofu,protein,fridge,2,FALSE
+tomato,red,fridge,3,TRUE
+tortilla,carb,pantry,2,FALSE
+tuna,protein,pantry,2,FALSE
+turkey,protein,freezer,1,FALSE
+vegetarian,protein,SKIP,0,FALSE
+yogurt,dairy,fridge,2,FALSE
+zucchini,green,fridge,1,FALSE

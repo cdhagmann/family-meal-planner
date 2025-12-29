@@ -1,117 +1,117 @@
-# 🌈 Family Meal Planner
+# Family Meal Planner
 
-A simple, static meal planning tool that helps you "eat the rainbow" by tracking phytonutrient color diversity across your weekly meals.
-
-**[Live Demo](https://cdhagmann.com/family-meal-planner/)**
+A lightweight meal planning app with rainbow nutrition tracking, inventory management, and automatic grocery list generation. Built for GitHub Pages with Google Sheets as the backend.
 
 ## Features
 
-- 📊 **Rainbow Tracker** - Visual count of color groups in your planned meals
-- 🔍 **Smart Filtering** - Filter by meal type, protein, cuisine, or colors you need
-- 📱 **Mobile Friendly** - Works on phone, tablet, or desktop
-- 💾 **Persistent Plans** - Your weekly plan saves to browser storage
-- 📝 **Google Sheets Backend** - Edit meals in a familiar spreadsheet interface
-- ⚡ **No Server Required** - Runs entirely on GitHub Pages
+- **7-Day Planning Grid** - Plan breakfast, lunch, and dinner for each day
+- **Rainbow Diet Tracking** - Track 6 produce color categories per day
+- **Inventory Sidebar** - See what's in your fridge, freezer, pantry, and counter
+- **Expiring Items Alert** - Filter meals that use ingredients expiring soon
+- **Automatic Grocery List** - Calculates what to buy based on planned meals minus inventory
+- **Smart Filtering** - Filter by meal type, protein, cuisine, and needed colors
 
 ## How It Works
 
-1. Meals are stored in a Google Sheet with a `vegetables` column
-2. The app fetches the sheet as CSV and calculates rainbow colors automatically
-3. Color mapping is defined in `color_mapping.json` (vegetable → color category)
-4. Your weekly plan is saved to `localStorage` in your browser
+The app uses just **2 Google Sheets**:
 
-## Forking This Project
+1. **Meals** - Recipes with a comma-separated ingredients list
+2. **Inventory** - Ingredients with category, location, quantity, and expiring status
 
-### 1. Fork the Repository
+Colors, proteins, and carbs are derived from ingredient categories in the Inventory sheet.
 
-Click "Fork" on GitHub to create your own copy.
+## Setup for Forking
 
-### 2. Create Your Google Sheet
+### 1. Create a Google Sheet with 2 Tabs
 
-Create a new Google Sheet with these columns:
+**Tab 1: Meals**
+| name | cuisine | format | meal_type | red_flags | green_flags | ingredients |
+|------|---------|--------|-----------|-----------|-------------|-------------|
+| chicken tikka masala | Asian | bowl | dinner | two pans | | tomato, chicken, rice, spinach, onion |
 
-| Column | Description | Example |
-|--------|-------------|---------|
-| `name` | Meal name | `chicken tikka masala` |
-| `protein` | Protein type | `chicken`, `beef`, `veg`, `fish` |
-| `cuisine` | Cuisine style | `Asian`, `Amer`, `Mexi`, `Ital` |
-| `format` | Meal format | `bowl`, `salad`, `sandwich`, `soup` |
-| `meal_type` | When to eat | `breakfast`, `lunch`, `dinner` |
-| `red_flags` | Warnings (optional) | `two pans`, `lots of chopping` |
-| `green_flags` | Positives (optional) | `one pan`, `universal`, `quick` |
-| `vegetables` | Comma-separated list | `tomatoes, carrots, spinach, onions` |
+**Tab 2: Inventory**
+| name | category | location | quantity | expires_soon |
+|------|----------|----------|----------|--------------|
+| tomato | red | fridge | 3 | FALSE |
+| chicken | protein | freezer | 2 | FALSE |
+| spinach | leafy_green | fridge | 1 | TRUE |
 
-You can copy [our template sheet](https://docs.google.com/spreadsheets/d/1u4fWqFhBKxtekeXHjsSH7SQ8zcuoXM4oXWEfw5pt7Qg/edit) as a starting point.
+**Categories:** `red`, `orange_yellow`, `green`, `leafy_green`, `blue_purple`, `white_brown`, `protein`, `carb`, `dairy`, `pantry`
 
-### 3. Publish Your Sheet
+**Locations:** `fridge`, `freezer`, `pantry`, `counter`
 
-1. Open your Google Sheet
-2. Go to **File → Share → Publish to web**
-3. Select **Entire Document** and **Comma-separated values (.csv)**
-4. Click **Publish**
-5. Copy the URL (it will look like `https://docs.google.com/spreadsheets/d/e/XXXXX/pub?output=csv`)
+### Pro Tip: Multi-Select Dropdown for Ingredients
 
-### 4. Update the Config
+In Google Sheets, you can create a dropdown that references the Inventory names:
+1. Select the `ingredients` column in Meals
+2. Data → Data validation → Add rule
+3. Criteria: Dropdown (from a range) → Select `Inventory!A:A`
+4. Check "Allow multiple selections"
 
-Edit `app.js` and replace the `SHEET_URL` with your published CSV URL:
+This makes adding/editing meal ingredients much easier!
+
+### 2. Publish Each Sheet as CSV
+
+For each tab:
+1. File → Share → Publish to web
+2. Select the specific sheet tab
+3. Choose "Comma-separated values (.csv)"
+4. Click Publish
+5. Copy the URL (note the `gid=` parameter differs per sheet)
+
+### 3. Update config.js
+
+Replace the placeholder URLs:
 
 ```javascript
-const CONFIG = {
-  SHEET_URL: 'https://docs.google.com/spreadsheets/d/e/YOUR-SHEET-ID/pub?output=csv',
-  // ...
-};
+SHEETS: {
+  meals: 'https://docs.google.com/.../pub?gid=0&single=true&output=csv',
+  inventory: 'https://docs.google.com/.../pub?gid=123456&single=true&output=csv',
+}
 ```
 
-### 5. Update the Edit Link
+### 4. Enable GitHub Pages
 
-Edit `index.html` and replace the Google Sheet link with yours:
-
-```html
-<a href="https://docs.google.com/spreadsheets/d/YOUR-SHEET-ID/edit" target="_blank">Edit Meals</a>
-```
-
-### 6. Enable GitHub Pages
-
-1. Go to your forked repo's **Settings → Pages**
-2. Under "Source", select **main** branch
-3. Click **Save**
-4. Your site will be live at `https://YOUR-USERNAME.github.io/family-meal-planner/`
+1. Repo Settings → Pages
+2. Source: "Deploy from a branch"
+3. Branch: "main", folder: "/ (root)"
 
 ## File Structure
 
 ```
 family-meal-planner/
-├── index.html          # Page structure (edit title, links)
-├── styles.css          # All styling (edit colors, layout)
-├── app.js              # Config, data loading, state management
-├── render.js           # UI rendering functions
-├── color_mapping.json  # Vegetable → color category mapping
+├── index.html        # HTML shell
+├── config.js         # Sheet URLs and settings
+├── app.js            # State, data loading, calculations
+├── render.js         # UI rendering
+├── styles.css        # Three-column layout
+├── data/             # Fallback CSV files
+│   ├── meals.csv
+│   └── inventory.csv
 └── README.md
 ```
 
-## Customizing Colors
+## Usage Tips
 
-Edit `color_mapping.json` to change which vegetables map to which colors:
+- **Click a meal slot** to start adding meals
+- **Rainbow dots** show which colors are covered per day
+- **Expiring items** appear at the top of inventory
+- **Refresh button** (↻) fetches latest from Google Sheets
+- Week plan is stored in browser localStorage
 
-```json
-{
-  "red": ["tomato", "tomatoes", "strawberry", "beet", ...],
-  "orange_yellow": ["carrot", "carrots", "pepper", "squash", ...],
-  "green": ["cucumber", "celery", "peas", "avocado", ...],
-  "leafy_green": ["spinach", "kale", "broccoli", "lettuce", ...],
-  "blue_purple": ["eggplant", "olives", "blueberries", ...],
-  "white_brown": ["onion", "mushroom", "cauliflower", "potato", ...]
-}
-```
+## Customization
 
-The app matches these keywords against the `vegetables` column (case-insensitive).
+### Adding New Ingredients
 
-## Tips
+Add one row to Inventory with name, category, location, quantity=0, expires_soon=FALSE
 
-- **Sheet changes take 1-5 minutes** to appear (Google's caching)
-- **Plan is stored per-browser** - clearing browser data clears your plan
-- **Colors are calculated client-side** - just update the vegetables column, no formulas needed
+### Adding New Meals
 
-## License
+Add one row to Meals with the recipe info and comma-separated ingredients
 
-MIT - Feel free to fork and adapt for your family's needs!
+## Future Enhancements
+
+- [ ] Daily target tracking (protein/carb variety)
+- [ ] Snack slots
+- [ ] Xander's 2-meal buffer tracking
+- [ ] Price tracking for budget
