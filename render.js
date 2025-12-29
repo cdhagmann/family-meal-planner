@@ -34,6 +34,7 @@ function render() {
 function renderInventorySidebar() {
   const byLocation = getInventoryByLocation();
   const expiring = getExpiringItems();
+  const isDemo = CONFIG.DEMO_MODE;
   
   return `
     <div class="sidebar-header">
@@ -41,12 +42,15 @@ function renderInventorySidebar() {
       <button class="refresh-btn" onclick="refreshData()" title="Refresh from Google Sheets">↻</button>
     </div>
     
-    ${expiring.length > 0 ? `
+    ${isDemo ? '<div class="demo-badge">Demo Mode</div>' : ''}
+    
+    ${expiring.length > 0 && !expiring.every(i => i.fullyUsed) ? `
       <div class="expiring-section">
         <h4>⚠️ Use Soon</h4>
         <ul class="inventory-list expiring">
           ${expiring.map(item => `
-            <li class="inventory-item expiring">
+            <li class="inventory-item expiring ${item.fullyUsed ? 'fully-used' : ''} ${filters.ingredients.includes(item.name) ? 'selected' : ''}"
+                onclick="toggleFilter('ingredient', '${item.name}')">
               <span class="item-name">${item.name}</span>
               <span class="item-qty">${item.quantity}</span>
             </li>
@@ -65,8 +69,11 @@ function renderInventorySidebar() {
     ${renderInventoryLocation('🍌 Counter', byLocation.counter)}
     
     <div class="sidebar-footer">
-      <a href="https://docs.google.com/spreadsheets/d/1u4fWqFhBKxtekeXHjsSH7SQ8zcuoXM4oXWEfw5pt7Qg/edit" 
-         target="_blank" class="edit-link">Edit in Google Sheets →</a>
+      ${isDemo ? '' : `<a href="https://docs.google.com/spreadsheets/d/1ugx_pPD_Zw5Fl18vTLwyNH7gzKMe7NI3LlZcDPOzcFc/edit" 
+         target="_blank" class="edit-link">Edit in Google Sheets →</a>`}
+      <button class="demo-toggle" onclick="toggleDemoMode()">
+        ${isDemo ? 'Exit Demo Mode' : 'Try Demo Mode'}
+      </button>
     </div>
   `;
 }
@@ -79,7 +86,8 @@ function renderInventoryLocation(title, items) {
       <h4>${title}</h4>
       <ul class="inventory-list">
         ${items.map(item => `
-          <li class="inventory-item ${item.expires_soon ? 'expiring' : ''} cat-${item.category}">
+          <li class="inventory-item ${item.expires_soon ? 'expiring' : ''} ${item.fullyUsed ? 'fully-used' : ''} ${filters.ingredients.includes(item.name) ? 'selected' : ''} cat-${item.category}"
+              onclick="toggleFilter('ingredient', '${item.name}')">
             <span class="item-name">${item.name}</span>
             <span class="item-qty">${item.quantity}</span>
           </li>
@@ -274,6 +282,34 @@ function renderMealTabs() {
 // ============ Filters ============
 
 function renderFilters(proteins, cuisines) {
+  // Count proteins in planned meals
+  const proteinCounts = {};
+  proteins.forEach(p => proteinCounts[p] = 0);
+  
+  weekPlan.forEach(day => {
+    MEAL_SLOTS.forEach(slot => {
+      const meal = day[slot];
+      if (meal) {
+        getMealProteins(meal.name).forEach(p => {
+          if (proteinCounts.hasOwnProperty(p)) proteinCounts[p]++;
+        });
+      }
+    });
+  });
+  
+  // Count cuisines in planned meals
+  const cuisineCounts = {};
+  cuisines.forEach(c => cuisineCounts[c] = 0);
+  
+  weekPlan.forEach(day => {
+    MEAL_SLOTS.forEach(slot => {
+      const meal = day[slot];
+      if (meal && meal.cuisine) {
+        if (cuisineCounts.hasOwnProperty(meal.cuisine)) cuisineCounts[meal.cuisine]++;
+      }
+    });
+  });
+  
   return `
     <div class="filters">
       <div class="filter-section">
@@ -282,7 +318,7 @@ function renderFilters(proteins, cuisines) {
           ${proteins.map(p => `
             <button class="filter-btn ${filters.proteins.includes(p) ? 'active' : ''}"
                     onclick="toggleFilter('proteins', '${p}')">
-              ${p}
+              ${p}<span class="filter-count">${proteinCounts[p]}</span>
             </button>
           `).join('')}
         </div>
@@ -293,7 +329,7 @@ function renderFilters(proteins, cuisines) {
           ${cuisines.map(c => `
             <button class="filter-btn ${filters.cuisines.includes(c) ? 'active' : ''}"
                     onclick="toggleFilter('cuisines', '${c}')">
-              ${c}
+              ${c}<span class="filter-count">${cuisineCounts[c]}</span>
             </button>
           `).join('')}
         </div>
@@ -320,6 +356,10 @@ function renderStats(shown, total) {
   
   if (filters.expiringOnly) {
     statusText += ` • <span class="expiring-badge">Using expiring items</span>`;
+  }
+  
+  if (filters.ingredients.length > 0) {
+    statusText += ` • <span class="ingredient-badge">${filters.ingredients.join(' + ')}</span>`;
   }
   
   return `<div class="stats">${statusText}</div>`;

@@ -9,6 +9,7 @@ let filters = {
   cuisines: [],
   colorsNeeded: [],
   expiringOnly: false,
+  ingredients: [],  // Filter by specific ingredients (multi-select)
 };
 
 // ============ Week Plan Management ============
@@ -65,10 +66,16 @@ async function loadAllData(forceRefresh = false) {
   try {
     document.getElementById('app').innerHTML = '<div class="loading">Loading data...</div>';
     
+    // Use fallback data in demo mode, otherwise fetch from Google Sheets
+    const mealsUrl = CONFIG.DEMO_MODE ? CONFIG.FALLBACK.meals : CONFIG.SHEETS.meals;
+    const inventoryUrl = CONFIG.DEMO_MODE ? CONFIG.FALLBACK.inventory : CONFIG.SHEETS.inventory;
+    const fallbackMeals = CONFIG.DEMO_MODE ? null : CONFIG.FALLBACK.meals;
+    const fallbackInventory = CONFIG.DEMO_MODE ? null : CONFIG.FALLBACK.inventory;
+    
     // Fetch both CSVs in parallel
     const [mealsCSV, inventoryCSV] = await Promise.all([
-      fetchCSV(CONFIG.SHEETS.meals, CONFIG.FALLBACK.meals),
-      fetchCSV(CONFIG.SHEETS.inventory, CONFIG.FALLBACK.inventory),
+      fallbackMeals ? fetchCSV(mealsUrl, fallbackMeals) : fetchCSV(mealsUrl, mealsUrl),
+      fallbackInventory ? fetchCSV(inventoryUrl, fallbackInventory) : fetchCSV(inventoryUrl, inventoryUrl),
     ]);
 
     // Parse meals (now includes ingredients column)
@@ -261,9 +268,16 @@ function getMealCarbs(mealName) {
 
 function hasExpiringIngredients(mealName) {
   const ings = getMealIngredients(mealName);
+  const usage = getIngredientUsage();
+  
   return ings.some(ing => {
     const info = getIngredientInfo(ing);
-    return info.expires_soon && info.quantity > 0;
+    if (!info.expires_soon || info.quantity <= 0) return false;
+    
+    // Only count as expiring if not already fully used
+    const needed = usage[ing] || 0;
+    const fullyUsed = needed >= info.quantity;
+    return !fullyUsed;
   });
 }
 
@@ -383,6 +397,12 @@ function getFilteredMeals() {
     // Expiring ingredients filter
     if (filters.expiringOnly && !hasExpiringIngredients(meal.name)) return false;
     
+    // Specific ingredient filter (must have ALL selected ingredients)
+    if (filters.ingredients.length > 0) {
+      const ings = getMealIngredients(meal.name);
+      if (!filters.ingredients.every(fi => ings.includes(fi))) return false;
+    }
+    
     return true;
   });
 }
@@ -410,6 +430,27 @@ function sortMeals(filteredMeals) {
 
 // ============ Inventory Helpers ============
 
+function getIngredientUsage() {
+  // Count how many of each ingredient is needed by planned meals
+  const usage = {};
+  
+  weekPlan.forEach(day => {
+    MEAL_SLOTS.forEach(slot => {
+      const meal = day[slot];
+      if (meal) {
+        const ings = getMealIngredients(meal.name);
+        ings.forEach(ing => {
+          if (ing !== 'vegetarian') {
+            usage[ing] = (usage[ing] || 0) + 1;
+          }
+        });
+      }
+    });
+  });
+  
+  return usage;
+}
+
 function getInventoryByLocation() {
   const byLocation = {
     fridge: [],
@@ -418,15 +459,22 @@ function getInventoryByLocation() {
     counter: []
   };
   
+  const usage = getIngredientUsage();
+  
   Object.entries(inventory).forEach(([name, data]) => {
     if (data.quantity > 0 && data.location !== 'SKIP') {
       const location = data.location || 'pantry';
+      const needed = usage[name] || 0;
+      const fullyUsed = needed >= data.quantity;
+      
       if (byLocation[location]) {
         byLocation[location].push({
           name,
           quantity: data.quantity,
           expires_soon: data.expires_soon,
-          category: data.category
+          category: data.category,
+          needed,
+          fullyUsed
         });
       }
     }
@@ -445,9 +493,15 @@ function getInventoryByLocation() {
 }
 
 function getExpiringItems() {
+  const usage = getIngredientUsage();
+  
   return Object.entries(inventory)
     .filter(([name, data]) => data.expires_soon && data.quantity > 0 && data.location !== 'SKIP')
-    .map(([name, data]) => ({ name, quantity: data.quantity }));
+    .map(([name, data]) => {
+      const needed = usage[name] || 0;
+      const fullyUsed = needed >= data.quantity;
+      return { name, quantity: data.quantity, needed, fullyUsed };
+    });
 }
 
 // ============ User Actions ============
@@ -455,6 +509,10 @@ function getExpiringItems() {
 function toggleFilter(type, value) {
   if (type === 'expiringOnly') {
     filters.expiringOnly = !filters.expiringOnly;
+  } else if (type === 'ingredient') {
+    const idx = filters.ingredients.indexOf(value);
+    if (idx === -1) filters.ingredients.push(value);
+    else filters.ingredients.splice(idx, 1);
   } else {
     const arr = filters[type];
     const idx = arr.indexOf(value);
@@ -537,8 +595,13 @@ function clearWeek() {
 }
 
 function clearFilters() {
-  filters = { mealType: 'all', proteins: [], cuisines: [], colorsNeeded: [], expiringOnly: false };
+  filters = { mealType: 'all', proteins: [], cuisines: [], colorsNeeded: [], expiringOnly: false, ingredients: [] };
   render();
+}
+
+function toggleDemoMode() {
+  CONFIG.DEMO_MODE = !CONFIG.DEMO_MODE;
+  loadAllData(true);
 }
 
 // ============ Error Handling ============

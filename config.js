@@ -1,5 +1,8 @@
 // Configuration - Update these URLs with your published Google Sheet CSVs
 const CONFIG = {
+  // Demo mode - set to true to use local fallback data instead of Google Sheets
+  DEMO_MODE: false,
+  
   // Google Sheets URLs (each sheet published separately as CSV)
   // To get these: File → Share → Publish to web → Select sheet → CSV → Publish
   SHEETS: {

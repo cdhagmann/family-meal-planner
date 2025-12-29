@@ -20,6 +20,10 @@ The app uses just **2 Google Sheets**:
 
 Colors, proteins, and carbs are derived from ingredient categories in the Inventory sheet.
 
+## Quick Start (Demo Mode)
+
+Want to try it out without setting up Google Sheets? Set `DEMO_MODE: true` in `config.js` and the app will use the sample data in the `data/` folder.
+
 ## Setup for Forking
 
 ### 1. Create a Google Sheet with 2 Tabs
