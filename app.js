@@ -2,7 +2,7 @@
 const CONFIG = {
   SHEET_URL: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSI1SbacmBCYeZLc717wSxtvJ9MgirIp97I58FGtX3V3YHQ1gnZhyUvp7c3PMvhXaUv6J73LW8spsDi/pub?output=csv',
   COLOR_MAPPING_URL: 'color_mapping.json',
-  STORAGE_KEY: 'plannedMeals'
+  STORAGE_KEY: 'weekPlan'
 };
 
 const COLOR_NAMES = {
@@ -14,16 +14,54 @@ const COLOR_NAMES = {
   white_brown: 'White/Brown'
 };
 
+const MEAL_SLOTS = ['breakfast', 'lunch', 'dinner'];
+const NUM_DAYS = 7;
+
 // App state
 let colorMapping = {};
 let meals = [];
-let plannedMeals = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEY) || '[]');
+let weekPlan = loadWeekPlan();
+let selectedSlot = null; // { day: 0-6, slot: 'breakfast'|'lunch'|'dinner' }
 let filters = {
   mealType: 'all',
   proteins: [],
   cuisines: [],
   colorsNeeded: []
 };
+
+// ============ Week Plan Management ============
+
+function createEmptyWeekPlan() {
+  const plan = [];
+  for (let day = 0; day < NUM_DAYS; day++) {
+    plan.push({
+      breakfast: null,
+      lunch: null,
+      dinner: null
+    });
+  }
+  return plan;
+}
+
+function loadWeekPlan() {
+  try {
+    const saved = localStorage.getItem(CONFIG.STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      // Validate structure
+      if (Array.isArray(parsed) && parsed.length === NUM_DAYS) {
+        return parsed;
+      }
+    }
+  } catch (e) {
+    console.error('Failed to load week plan:', e);
+  }
+  return createEmptyWeekPlan();
+}
+
+function saveWeekPlan() {
+  localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(weekPlan));
+}
 
 // ============ Data Loading ============
 
@@ -62,12 +100,13 @@ async function loadMeals() {
           .map(row => parseMealRow(row))
           .filter(m => m.name);
         
-        // Recalculate colors for planned meals
-        plannedMeals = plannedMeals.map(pm => ({
-          ...pm,
-          colors: calculateColors(pm.vegetables || '')
+        // Recalculate colors for meals in week plan
+        weekPlan = weekPlan.map(day => ({
+          breakfast: day.breakfast ? { ...day.breakfast, colors: calculateColors(day.breakfast.vegetables || '') } : null,
+          lunch: day.lunch ? { ...day.lunch, colors: calculateColors(day.lunch.vegetables || '') } : null,
+          dinner: day.dinner ? { ...day.dinner, colors: calculateColors(day.dinner.vegetables || '') } : null
         }));
-        savePlan();
+        saveWeekPlan();
         
         console.log(`Loaded ${meals.length} meals`);
         render();
@@ -124,14 +163,44 @@ function calculateColors(vegetablesStr) {
   return colors;
 }
 
-function getColorCounts() {
+function getColorCountsForDay(dayIndex) {
   const counts = { red: 0, orange_yellow: 0, green: 0, leafy_green: 0, blue_purple: 0, white_brown: 0 };
-  plannedMeals.forEach(meal => {
-    Object.keys(counts).forEach(color => {
-      if (meal.colors && meal.colors[color]) counts[color]++;
+  const day = weekPlan[dayIndex];
+  
+  MEAL_SLOTS.forEach(slot => {
+    const meal = day[slot];
+    if (meal && meal.colors) {
+      Object.keys(counts).forEach(color => {
+        if (meal.colors[color]) counts[color]++;
+      });
+    }
+  });
+  
+  return counts;
+}
+
+function getColorCountsForWeek() {
+  const counts = { red: 0, orange_yellow: 0, green: 0, leafy_green: 0, blue_purple: 0, white_brown: 0 };
+  
+  weekPlan.forEach(day => {
+    MEAL_SLOTS.forEach(slot => {
+      const meal = day[slot];
+      if (meal && meal.colors) {
+        Object.keys(counts).forEach(color => {
+          if (meal.colors[color]) counts[color]++;
+        });
+      }
     });
   });
+  
   return counts;
+}
+
+function getMissingColorsForDay(dayIndex) {
+  const counts = getColorCountsForDay(dayIndex);
+  return Object.entries(counts)
+    .filter(([_, count]) => count === 0)
+    .map(([color]) => color);
 }
 
 // ============ Filtering ============
@@ -177,24 +246,74 @@ function setMealType(type) {
   render();
 }
 
-function addMeal(meal) {
-  if (!plannedMeals.find(m => m.name === meal.name)) {
-    plannedMeals.push(meal);
-    savePlan();
+function selectSlot(day, slot) {
+  // Toggle selection
+  if (selectedSlot && selectedSlot.day === day && selectedSlot.slot === slot) {
+    selectedSlot = null;
+  } else {
+    selectedSlot = { day, slot };
+    // Auto-filter to matching meal type
+    filters.mealType = slot;
+    // Auto-filter to missing colors for that day
+    filters.colorsNeeded = getMissingColorsForDay(day);
+  }
+  render();
+}
+
+function addMealToSlot(meal) {
+  if (selectedSlot) {
+    weekPlan[selectedSlot.day][selectedSlot.slot] = meal;
+    saveWeekPlan();
+    // Move to next empty slot or clear selection
+    const nextSlot = findNextEmptySlot(selectedSlot.day, selectedSlot.slot);
+    selectedSlot = nextSlot;
+    if (nextSlot) {
+      filters.mealType = nextSlot.slot;
+      filters.colorsNeeded = getMissingColorsForDay(nextSlot.day);
+    }
     render();
   }
 }
 
-function removeMeal(index) {
-  plannedMeals.splice(index, 1);
-  savePlan();
+function findNextEmptySlot(startDay, startSlot) {
+  const slotIndex = MEAL_SLOTS.indexOf(startSlot);
+  
+  // First check remaining slots in same day
+  for (let s = slotIndex + 1; s < MEAL_SLOTS.length; s++) {
+    if (!weekPlan[startDay][MEAL_SLOTS[s]]) {
+      return { day: startDay, slot: MEAL_SLOTS[s] };
+    }
+  }
+  
+  // Then check subsequent days
+  for (let d = startDay + 1; d < NUM_DAYS; d++) {
+    for (let s = 0; s < MEAL_SLOTS.length; s++) {
+      if (!weekPlan[d][MEAL_SLOTS[s]]) {
+        return { day: d, slot: MEAL_SLOTS[s] };
+      }
+    }
+  }
+  
+  return null;
+}
+
+function removeMealFromSlot(day, slot) {
+  weekPlan[day][slot] = null;
+  saveWeekPlan();
   render();
 }
 
-function clearPlan() {
-  if (confirm('Clear all planned meals?')) {
-    plannedMeals = [];
-    savePlan();
+function clearDay(day) {
+  weekPlan[day] = { breakfast: null, lunch: null, dinner: null };
+  saveWeekPlan();
+  render();
+}
+
+function clearWeek() {
+  if (confirm('Clear all meals for the week?')) {
+    weekPlan = createEmptyWeekPlan();
+    selectedSlot = null;
+    saveWeekPlan();
     render();
   }
 }
@@ -202,10 +321,6 @@ function clearPlan() {
 function clearFilters() {
   filters = { mealType: 'all', proteins: [], cuisines: [], colorsNeeded: [] };
   render();
-}
-
-function savePlan() {
-  localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(plannedMeals));
 }
 
 // ============ Error Handling ============
