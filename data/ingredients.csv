@@ -1,0 +1,115 @@
+name,category,sub_category,location
+almonds,nut,nut,pantry
+apple,produce,white/brown,fridge
+artichoke,produce,green,pantry
+asiago,dairy,cheese,fridge
+asparagus,produce,green,fridge
+avocado,produce,green,counter
+bacon,protein,meat,fridge
+banana,produce,white/brown,counter
+beef,protein,meat,freezer
+black beans,protein,bean,pantry
+blackberry,produce,blue/purple,fridge
+blueberry,produce,blue/purple,fridge
+broccoli,produce,leafy_green,fridge
+brussel sprout,produce,leafy_green,fridge
+butter,dairy,fat,freezer
+cabbage,produce,leafy_green,fridge
+cantaloupe,produce,orange/yellow,fridge
+carrot,produce,orange/yellow,fridge
+cashews,nut,nut,pantry
+cauliflower,produce,white/brown,fridge
+celery,produce,green,fridge
+cheddar,dairy,cheese,fridge
+cherry,produce,red,fridge
+chicken,protein,meat,freezer
+chickpeas,protein,bean,pantry
+chips,carb,tortilla,pantry
+coconut milk,produce,white/brown,pantry
+corn,produce,orange/yellow,fridge
+corn,carb,tortilla,pantry
+cottage cheese,dairy,cheese,fridge
+cornbread,carb,bread,pantry
+crackers,carb,bread,pantry
+cranberry,produce,red,pantry
+cream,dairy,fat,fridge
+cream cheese,dairy,cheese,fridge
+cucumber,produce,green,fridge
+date,produce,white/brown,pantry
+dumpling,carb,bread,freezer
+egg,protein,egg,fridge
+feta,dairy,cheese,fridge
+fish,protein,fish,freezer
+garlic,produce,white/brown,pantry
+ginger,produce,orange/yellow,fridge
+green bean,produce,green,fridge
+green grape,produce,green,fridge
+green pea,produce,green,freezer
+grits,carb,rice,pantry
+ground meat,protein,meat,freezer
+ground turkey,protein,meat,freezer
+ham,protein,meat,fridge
+kale,produce,leafy_green,fridge
+kidney beans,protein,bean,pantry
+kiwi,produce,green,fridge
+lemon,produce,orange/yellow,fridge
+lentils,protein,bean,pantry
+lettuce,produce,leafy_green,fridge
+lime,produce,green,fridge
+mango,produce,orange/yellow,fridge
+milk,dairy,milk,fridge
+mozzarella,dairy,cheese,fridge
+mushroom,produce,white/brown,fridge
+naan,carb,bread,freezer
+noodle,carb,noodle,pantry
+oat,carb,bread,pantry
+olive,produce,blue/purple,pantry
+onion,produce,white/brown,pantry
+orange,produce,orange/yellow,fridge
+pasta,carb,noodle,pantry
+peach,produce,orange/yellow,fridge
+peanut butter,nut,nut,pantry
+pear,produce,white/brown,counter
+pecans,nut,nut,pantry
+pepper,produce,orange/yellow,fridge
+pepperoni,protein,meat,fridge
+pineapple,produce,orange/yellow,counter
+pistachios,nut,nut,pantry
+pita,carb,bread,pantry
+pizza dough,carb,bread,freezer
+plum,produce,blue/purple,fridge
+pomegranate,produce,red,fridge
+pork,protein,meat,freezer
+potato,produce,white/brown,counter
+potato,carb,potato,counter
+prune,produce,blue/purple,pantry
+pumpkin,produce,orange/yellow,pantry
+purple grape,produce,blue/purple,fridge
+purple onion,produce,blue/purple,counter
+quinoa,carb,rice,pantry
+raisin,produce,blue/purple,pantry
+ramen,carb,noodle,pantry
+raspberry,produce,red,fridge
+red bell pepper,produce,red,fridge
+rice,carb,rice,pantry
+rice noodles,carb,noodle,pantry
+salmon,protein,fish,fridge
+sausage,protein,meat,fridge
+shrimp,protein,fish,freezer
+spinach,produce,leafy_green,fridge
+squash,produce,orange/yellow,fridge
+strawberry,produce,red,fridge
+sweet potato,produce,orange/yellow,counter
+sweet potato,carb,potato,counter
+tilapia,protein,fish,freezer
+tofu,protein,tofu,fridge
+tomato,produce,red,counter
+tortilla,carb,tortilla,counter
+tuna,protein,fish,pantry
+turkey,protein,meat,freezer
+walnuts,nut,nut,pantry
+watermelon,produce,red,fridge
+yellow bell pepper,produce,orange/yellow,fridge
+yellow squash,produce,orange/yellow,fridge
+yogurt,dairy,yogurt,fridge
+zucchini,produce,green,fridge

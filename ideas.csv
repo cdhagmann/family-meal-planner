@@ -1,0 +1,406 @@
+protein,format,carb,name
+beans,salad,bread,N/A
+beans,salad,pasta,N/A
+beans,salad,potatoes,N/A
+beans,salad,rice,N/A
+beans,salad,tortilla,N/A
+beans,toast,bread,beans on toast
+beans,toast,pasta,pasta e fagioli (open)
+beans,toast,potatoes,smashed potatoes with beans
+beans,toast,rice,rice bowl with beans
+beans,toast,tortilla,tostadas with refried beans
+beans,sandwich,bread,bean burger
+beans,sandwich,pasta,N/A
+beans,sandwich,potatoes,bean stuffed potato cake
+beans,sandwich,rice,rice cake bean sandwich
+beans,sandwich,tortilla,bean quesadilla
+beans,taco,bread,bean sub
+beans,taco,pasta,N/A
+beans,taco,potatoes,bean stuffed potato skin
+beans,taco,rice,N/A
+beans,taco,tortilla,black bean tacos
+beans,sushi,bread,beans in a blanket roll
+beans,sushi,pasta,N/A
+beans,sushi,potatoes,N/A
+beans,sushi,rice,bean sushi roll
+beans,sushi,tortilla,bean wrap
+beans,quiche,bread,bean bread bowl
+beans,quiche,pasta,N/A
+beans,quiche,potatoes,bean stuffed baked potato
+beans,quiche,rice,N/A
+beans,quiche,tortilla,bean taco salad shell
+beans,calzone,bread,bean stuffed bread
+beans,calzone,pasta,N/A
+beans,calzone,potatoes,bean empanada
+beans,calzone,rice,bean stuffed rice ball
+beans,calzone,tortilla,bean burrito
+beans,cake,bread,N/A
+beans,cake,pasta,bean lasagna
+beans,cake,potatoes,bean and potato stack
+beans,cake,rice,bean rice layer bowl
+beans,cake,tortilla,seven layer dip with beans
+beans,nachos,bread,bean bruschetta bites
+beans,nachos,pasta,pasta e fagioli
+beans,nachos,potatoes,irish nachos with black beans
+beans,nachos,rice,beans and rice
+beans,nachos,tortilla,bean nachos
+chickpeas,salad,bread,N/A
+chickpeas,salad,pasta,N/A
+chickpeas,salad,potatoes,N/A
+chickpeas,salad,rice,N/A
+chickpeas,salad,tortilla,N/A
+chickpeas,toast,bread,hummus toast
+chickpeas,toast,pasta,pasta with chickpeas (open)
+chickpeas,toast,potatoes,smashed potatoes with chickpeas
+chickpeas,toast,rice,chickpea rice bowl
+chickpeas,toast,tortilla,chickpea tostadas
+chickpeas,sandwich,bread,falafel sandwich
+chickpeas,sandwich,pasta,N/A
+chickpeas,sandwich,potatoes,aloo tikki sandwich
+chickpeas,sandwich,rice,chickpea rice cake sandwich
+chickpeas,sandwich,tortilla,chickpea quesadilla
+chickpeas,taco,bread,falafel sub
+chickpeas,taco,pasta,N/A
+chickpeas,taco,potatoes,N/A
+chickpeas,taco,rice,N/A
+chickpeas,taco,tortilla,chickpea tacos
+chickpeas,sushi,bread,falafel in a blanket
+chickpeas,sushi,pasta,N/A
+chickpeas,sushi,potatoes,N/A
+chickpeas,sushi,rice,falafel sushi roll
+chickpeas,sushi,tortilla,chickpea shawarma wrap
+chickpeas,quiche,bread,falafel pita pocket
+chickpeas,quiche,pasta,N/A
+chickpeas,quiche,potatoes,chana masala in potato bowl
+chickpeas,quiche,rice,N/A
+chickpeas,quiche,tortilla,chickpea taco shell bowl
+chickpeas,calzone,bread,chickpea stuffed bread
+chickpeas,calzone,pasta,N/A
+chickpeas,calzone,potatoes,samosa
+chickpeas,calzone,rice,chickpea onigiri
+chickpeas,calzone,tortilla,chickpea burrito
+chickpeas,cake,bread,N/A
+chickpeas,cake,pasta,chickpea pasta bake
+chickpeas,cake,potatoes,aloo tikki stack
+chickpeas,cake,rice,chickpea rice stack
+chickpeas,cake,tortilla,chickpea tostada stack
+chickpeas,nachos,bread,hummus crostini
+chickpeas,nachos,pasta,pasta with crispy chickpeas
+chickpeas,nachos,potatoes,loaded fries with chana masala
+chickpeas,nachos,rice,chana masala with rice
+chickpeas,nachos,tortilla,mediterranean nachos
+eggs,salad,bread,N/A
+eggs,salad,pasta,N/A
+eggs,salad,potatoes,N/A
+eggs,salad,rice,N/A
+eggs,salad,tortilla,N/A
+eggs,toast,bread,eggs on toast
+eggs,toast,pasta,carbonara (open plated)
+eggs,toast,potatoes,hash browns with fried eggs
+eggs,toast,rice,tamago gohan
+eggs,toast,tortilla,huevos rancheros
+eggs,sandwich,bread,egg sandwich
+eggs,sandwich,pasta,N/A
+eggs,sandwich,potatoes,egg and potato sandwich
+eggs,sandwich,rice,egg onigirazu
+eggs,sandwich,tortilla,egg quesadilla
+eggs,taco,bread,egg salad sub
+eggs,taco,pasta,N/A
+eggs,taco,potatoes,N/A
+eggs,taco,rice,N/A
+eggs,taco,tortilla,breakfast tacos
+eggs,sushi,bread,egg in a blanket
+eggs,sushi,pasta,N/A
+eggs,sushi,potatoes,N/A
+eggs,sushi,rice,tamago maki
+eggs,sushi,tortilla,breakfast wrap
+eggs,quiche,bread,egg bread bowl
+eggs,quiche,pasta,N/A
+eggs,quiche,potatoes,egg stuffed baked potato
+eggs,quiche,rice,N/A
+eggs,quiche,tortilla,breakfast taco bowl
+eggs,calzone,bread,egg croissant
+eggs,calzone,pasta,N/A
+eggs,calzone,potatoes,egg piroshki
+eggs,calzone,rice,omurice
+eggs,calzone,tortilla,breakfast burrito
+eggs,cake,bread,strata
+eggs,cake,pasta,frittata di pasta
+eggs,cake,potatoes,spanish tortilla
+eggs,cake,rice,korean egg rice cake
+eggs,cake,tortilla,migas stack
+eggs,nachos,bread,egg bruschetta
+eggs,nachos,pasta,egg drop noodles
+eggs,nachos,potatoes,breakfast poutine
+eggs,nachos,rice,egg fried rice
+eggs,nachos,tortilla,chilaquiles
+fish,salad,bread,N/A
+fish,salad,pasta,N/A
+fish,salad,potatoes,N/A
+fish,salad,rice,N/A
+fish,salad,tortilla,N/A
+fish,toast,bread,sardines on toast
+fish,toast,pasta,tuna pasta (plated)
+fish,toast,potatoes,fish and chips
+fish,toast,rice,poke bowl
+fish,toast,tortilla,fish tostadas
+fish,sandwich,bread,fish sandwich
+fish,sandwich,pasta,N/A
+fish,sandwich,potatoes,fish cake sandwich
+fish,sandwich,rice,salmon onigirazu
+fish,sandwich,tortilla,fish quesadilla
+fish,taco,bread,fish po'boy
+fish,taco,pasta,N/A
+fish,taco,potatoes,N/A
+fish,taco,rice,N/A
+fish,taco,tortilla,fish tacos
+fish,sushi,bread,fish in puff pastry roll
+fish,sushi,pasta,N/A
+fish,sushi,potatoes,N/A
+fish,sushi,rice,sushi roll
+fish,sushi,tortilla,fish wrap
+fish,quiche,bread,fish chowder bread bowl
+fish,quiche,pasta,N/A
+fish,quiche,potatoes,fish stuffed baked potato
+fish,quiche,rice,N/A
+fish,quiche,tortilla,fish taco bowl
+fish,calzone,bread,salmon en croute
+fish,calzone,pasta,N/A
+fish,calzone,potatoes,fish pasty
+fish,calzone,rice,salmon onigiri
+fish,calzone,tortilla,fish burrito
+fish,cake,bread,fish finger sandwich stack
+fish,cake,pasta,tuna noodle casserole
+fish,cake,potatoes,fish pie
+fish,cake,rice,salmon rice bake
+fish,cake,tortilla,fish enchilada stack
+fish,nachos,bread,smoked fish crostini
+fish,nachos,pasta,tuna noodle bowl
+fish,nachos,potatoes,fish and chips (deconstructed)
+fish,nachos,rice,chirashi bowl
+fish,nachos,tortilla,fish nachos
+lentils,salad,bread,N/A
+lentils,salad,pasta,N/A
+lentils,salad,potatoes,N/A
+lentils,salad,rice,N/A
+lentils,salad,tortilla,N/A
+lentils,toast,bread,lentils on toast
+lentils,toast,pasta,lentil pasta (plated)
+lentils,toast,potatoes,dal with roasted potatoes
+lentils,toast,rice,dal over rice
+lentils,toast,tortilla,lentil tostadas
+lentils,sandwich,bread,lentil sloppy joe
+lentils,sandwich,pasta,N/A
+lentils,sandwich,potatoes,lentil potato patty sandwich
+lentils,sandwich,rice,lentil rice sandwich
+lentils,sandwich,tortilla,lentil quesadilla
+lentils,taco,bread,lentil sub
+lentils,taco,pasta,N/A
+lentils,taco,potatoes,N/A
+lentils,taco,rice,N/A
+lentils,taco,tortilla,lentil tacos
+lentils,sushi,bread,lentil roll-up
+lentils,sushi,pasta,N/A
+lentils,sushi,potatoes,N/A
+lentils,sushi,rice,lentil sushi roll
+lentils,sushi,tortilla,lentil wrap
+lentils,quiche,bread,dal bread bowl
+lentils,quiche,pasta,N/A
+lentils,quiche,potatoes,lentil stuffed potato
+lentils,quiche,rice,N/A
+lentils,quiche,tortilla,lentil taco bowl
+lentils,calzone,bread,lentil stuffed bread
+lentils,calzone,pasta,N/A
+lentils,calzone,potatoes,lentil samosa
+lentils,calzone,rice,lentil stuffed rice ball
+lentils,calzone,tortilla,lentil burrito
+lentils,cake,bread,N/A
+lentils,cake,pasta,lentil lasagna
+lentils,cake,potatoes,lentil shepherd's pie
+lentils,cake,rice,mujadara layered
+lentils,cake,tortilla,lentil enchilada stack
+lentils,nachos,bread,lentil bruschetta
+lentils,nachos,pasta,lentil pasta bowl
+lentils,nachos,potatoes,loaded fries with dal
+lentils,nachos,rice,mujadara
+lentils,nachos,tortilla,lentil nachos
+chicken,salad,bread,N/A
+chicken,salad,pasta,N/A
+chicken,salad,potatoes,N/A
+chicken,salad,rice,N/A
+chicken,salad,tortilla,N/A
+chicken,toast,bread,chicken on toast
+chicken,toast,pasta,chicken pasta (plated)
+chicken,toast,potatoes,roast chicken with potatoes
+chicken,toast,rice,teriyaki chicken bowl
+chicken,toast,tortilla,chicken tostadas
+chicken,sandwich,bread,chicken sandwich
+chicken,sandwich,pasta,N/A
+chicken,sandwich,potatoes,chicken and potato sandwich
+chicken,sandwich,rice,chicken onigirazu
+chicken,sandwich,tortilla,chicken quesadilla
+chicken,taco,bread,chicken sub
+chicken,taco,pasta,N/A
+chicken,taco,potatoes,N/A
+chicken,taco,rice,N/A
+chicken,taco,tortilla,chicken tacos
+chicken,sushi,bread,chicken in a blanket
+chicken,sushi,pasta,N/A
+chicken,sushi,potatoes,N/A
+chicken,sushi,rice,chicken sushi roll
+chicken,sushi,tortilla,chicken wrap
+chicken,quiche,bread,chicken pot pie (open)
+chicken,quiche,pasta,N/A
+chicken,quiche,potatoes,chicken stuffed potato
+chicken,quiche,rice,N/A
+chicken,quiche,tortilla,chicken taco bowl
+chicken,calzone,bread,chicken pot pie
+chicken,calzone,pasta,N/A
+chicken,calzone,potatoes,chicken empanada
+chicken,calzone,rice,chicken onigiri
+chicken,calzone,tortilla,chicken burrito
+chicken,cake,bread,chicken and waffles stack
+chicken,cake,pasta,chicken alfredo bake
+chicken,cake,potatoes,chicken potato bake
+chicken,cake,rice,chicken rice casserole
+chicken,cake,tortilla,chicken enchilada stack
+chicken,nachos,bread,buffalo chicken crostini
+chicken,nachos,pasta,chicken noodle soup
+chicken,nachos,potatoes,loaded fries with chicken
+chicken,nachos,rice,chicken fried rice
+chicken,nachos,tortilla,chicken nachos
+beef,salad,bread,N/A
+beef,salad,pasta,N/A
+beef,salad,potatoes,N/A
+beef,salad,rice,N/A
+beef,salad,tortilla,N/A
+beef,toast,bread,roast beef on bread
+beef,toast,pasta,beef ragu (plated)
+beef,toast,potatoes,steak and potatoes
+beef,toast,rice,beef bulgogi bowl
+beef,toast,tortilla,carne asada tostadas
+beef,sandwich,bread,roast beef sandwich
+beef,sandwich,pasta,N/A
+beef,sandwich,potatoes,beef and potato sandwich
+beef,sandwich,rice,beef onigirazu
+beef,sandwich,tortilla,beef quesadilla
+beef,taco,bread,cheesesteak hoagie
+beef,taco,pasta,N/A
+beef,taco,potatoes,N/A
+beef,taco,rice,N/A
+beef,taco,tortilla,beef tacos
+beef,sushi,bread,beef wellington roll
+beef,sushi,pasta,N/A
+beef,sushi,potatoes,N/A
+beef,sushi,rice,beef sushi roll
+beef,sushi,tortilla,beef wrap
+beef,quiche,bread,beef stew bread bowl
+beef,quiche,pasta,N/A
+beef,quiche,potatoes,beef stuffed potato
+beef,quiche,rice,N/A
+beef,quiche,tortilla,beef taco bowl
+beef,calzone,bread,beef wellington
+beef,calzone,pasta,N/A
+beef,calzone,potatoes,beef empanada
+beef,calzone,rice,beef onigiri
+beef,calzone,tortilla,beef burrito
+beef,cake,bread,big mac
+beef,cake,pasta,lasagna
+beef,cake,potatoes,shepherd's pie
+beef,cake,rice,beef rice casserole
+beef,cake,tortilla,beef enchilada stack
+beef,nachos,bread,cheesesteak crostini
+beef,nachos,pasta,beef stroganoff
+beef,nachos,potatoes,carne asada fries
+beef,nachos,rice,beef fried rice
+beef,nachos,tortilla,carne asada nachos
+pork,salad,bread,N/A
+pork,salad,pasta,N/A
+pork,salad,potatoes,N/A
+pork,salad,rice,N/A
+pork,salad,tortilla,N/A
+pork,toast,bread,pulled pork toast
+pork,toast,pasta,pork ragu (plated)
+pork,toast,potatoes,pork chops and potatoes
+pork,toast,rice,katsudon
+pork,toast,tortilla,carnitas tostadas
+pork,sandwich,bread,pulled pork sandwich
+pork,sandwich,pasta,N/A
+pork,sandwich,potatoes,pork and potato sandwich
+pork,sandwich,rice,spam musubi sandwich
+pork,sandwich,tortilla,pork quesadilla
+pork,taco,bread,pork sub
+pork,taco,pasta,N/A
+pork,taco,potatoes,N/A
+pork,taco,rice,N/A
+pork,taco,tortilla,carnitas tacos
+pork,sushi,bread,pigs in a blanket
+pork,sushi,pasta,N/A
+pork,sushi,potatoes,N/A
+pork,sushi,rice,spam musubi roll
+pork,sushi,tortilla,carnitas wrap
+pork,quiche,bread,pork stew bread bowl
+pork,quiche,pasta,N/A
+pork,quiche,potatoes,pork stuffed potato
+pork,quiche,rice,N/A
+pork,quiche,tortilla,pork taco bowl
+pork,calzone,bread,pork bao
+pork,calzone,pasta,N/A
+pork,calzone,potatoes,pork empanada
+pork,calzone,rice,pork onigiri
+pork,calzone,tortilla,carnitas burrito
+pork,cake,bread,cuban sandwich stack
+pork,cake,pasta,baked ziti with sausage
+pork,cake,potatoes,scalloped potatoes with ham
+pork,cake,rice,pork fried rice casserole
+pork,cake,tortilla,pork enchilada stack
+pork,nachos,bread,pulled pork crostini
+pork,nachos,pasta,pork lo mein
+pork,nachos,potatoes,loaded fries with carnitas
+pork,nachos,rice,pork fried rice
+pork,nachos,tortilla,carnitas nachos
+tofu,salad,bread,N/A
+tofu,salad,pasta,N/A
+tofu,salad,potatoes,N/A
+tofu,salad,rice,N/A
+tofu,salad,tortilla,N/A
+tofu,toast,bread,tofu scramble toast
+tofu,toast,pasta,tofu pasta (plated)
+tofu,toast,potatoes,crispy tofu with potatoes
+tofu,toast,rice,tofu teriyaki bowl
+tofu,toast,tortilla,tofu tostadas
+tofu,sandwich,bread,crispy tofu sandwich
+tofu,sandwich,pasta,N/A
+tofu,sandwich,potatoes,tofu potato sandwich
+tofu,sandwich,rice,tofu onigirazu
+tofu,sandwich,tortilla,tofu quesadilla
+tofu,taco,bread,tofu banh mi
+tofu,taco,pasta,N/A
+tofu,taco,potatoes,N/A
+tofu,taco,rice,N/A
+tofu,taco,tortilla,tofu tacos
+tofu,sushi,bread,tofu in a blanket
+tofu,sushi,pasta,N/A
+tofu,sushi,potatoes,N/A
+tofu,sushi,rice,inari sushi
+tofu,sushi,tortilla,tofu wrap
+tofu,quiche,bread,tofu curry bread bowl
+tofu,quiche,pasta,N/A
+tofu,quiche,potatoes,tofu stuffed potato
+tofu,quiche,rice,N/A
+tofu,quiche,tortilla,tofu taco bowl
+tofu,calzone,bread,tofu bao
+tofu,calzone,pasta,N/A
+tofu,calzone,potatoes,tofu samosa
+tofu,calzone,rice,tofu onigiri
+tofu,calzone,tortilla,tofu burrito
+tofu,cake,bread,tofu club stack
+tofu,cake,pasta,tofu lasagna
+tofu,cake,potatoes,tofu shepherd's pie
+tofu,cake,rice,tofu rice casserole
+tofu,cake,tortilla,tofu enchilada stack
+tofu,nachos,bread,crispy tofu crostini
+tofu,nachos,pasta,tofu pad thai
+tofu,nachos,potatoes,loaded fries with tofu
+tofu,nachos,rice,mapo tofu with rice
+tofu,nachos,tortilla,tofu nachos

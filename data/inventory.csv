@@ -1,71 +1,121 @@
-name,category,location,quantity,expires_soon
-artichoke,green,pantry,0,FALSE
-avocado,green,counter,2,FALSE
-bacon,protein,fridge,1,FALSE
-beef,protein,freezer,2,FALSE
-black bean,protein,pantry,3,FALSE
-blueberry,blue_purple,fridge,1,TRUE
-bread,carb,counter,1,FALSE
-broccoli,leafy_green,fridge,2,FALSE
-butter,dairy,fridge,1,FALSE
-cabbage,green,fridge,1,FALSE
-carrot,orange_yellow,fridge,4,FALSE
-cauliflower,white_brown,fridge,1,FALSE
-celery,green,fridge,1,TRUE
-cereal,carb,pantry,2,FALSE
-cheese,dairy,fridge,2,FALSE
-chicken,protein,freezer,3,FALSE
-chickpea,white_brown,pantry,2,FALSE
-corn,orange_yellow,pantry,2,FALSE
-cornbread,carb,pantry,0,FALSE
-cracker,carb,pantry,1,FALSE
-cream,dairy,fridge,0,FALSE
-cucumber,green,fridge,2,FALSE
-dumpling,carb,freezer,1,FALSE
-egg,protein,fridge,12,FALSE
-feta,dairy,fridge,1,FALSE
-fish,protein,freezer,2,FALSE
-garlic,white_brown,counter,3,FALSE
-ginger,orange_yellow,fridge,1,FALSE
-green bean,green,fridge,1,FALSE
-grits,carb,pantry,1,FALSE
-ground meat,protein,freezer,2,FALSE
-ham,protein,fridge,0,FALSE
-kale,leafy_green,fridge,1,TRUE
-kidney bean,protein,pantry,2,FALSE
-lemon,orange_yellow,counter,2,FALSE
-lentil,white_brown,pantry,1,FALSE
-lettuce,leafy_green,fridge,1,TRUE
-lime,green,counter,1,FALSE
-milk,dairy,fridge,1,FALSE
-mushroom,white_brown,fridge,1,FALSE
-naan,carb,freezer,1,FALSE
-noodle,carb,pantry,3,FALSE
-oat,carb,pantry,2,FALSE
-olive,blue_purple,pantry,1,FALSE
-onion,white_brown,counter,4,FALSE
-pasta,carb,pantry,3,FALSE
-pea,green,freezer,2,FALSE
-pepper,orange_yellow,fridge,3,FALSE
-pepperoni,protein,fridge,0,FALSE
-pita,carb,pantry,1,FALSE
-pizza dough,carb,freezer,2,FALSE
-pork,protein,freezer,1,FALSE
-potato,white_brown,counter,4,FALSE
-quinoa,carb,pantry,1,FALSE
-raisin,blue_purple,pantry,1,FALSE
-rice,carb,pantry,2,FALSE
-salmon,protein,freezer,2,FALSE
-sausage,protein,freezer,2,FALSE
-shrimp,protein,freezer,0,FALSE
-sour cream,dairy,fridge,1,FALSE
-spinach,leafy_green,fridge,1,TRUE
-squash,orange_yellow,fridge,1,FALSE
-tofu,protein,fridge,2,FALSE
-tomato,red,fridge,3,TRUE
-tortilla,carb,pantry,2,FALSE
-tuna,protein,pantry,2,FALSE
-turkey,protein,freezer,1,FALSE
-vegetarian,protein,SKIP,0,FALSE
-yogurt,dairy,fridge,2,FALSE
-zucchini,green,fridge,1,FALSE
+name,format,quantity,unit,expires_soon,min_usage,season
+almonds,shelf stable,2,package(s),FALSE,1,n/a
+apple,fresh,10,ea,FALSE,1,n/a
+artichoke,shelf stable,0,jar(s),FALSE,1,n/a
+asiago,fresh,2,wedge,FALSE,1,n/a
+asparagus,fresh,0,bundle(s),FALSE,1,spring
+avocado,fresh,10,ea,TRUE,1,"spring, summer, winter"
+bacon,fresh,2,package(s),TRUE,1,n/a
+banana,fresh,10,ea,FALSE,1,n/a
+beef,frozen,0,lb,FALSE,1,n/a
+black beans,shelf stable,4,can(s),FALSE,1,n/a
+blackberry,fresh,0,package(s),FALSE,1,"spring, summer"
+blueberry,fresh,0,package(s),FALSE,1,summer
+blueberry,frozen,1,package(s),FALSE,2,n/a
+broccoli,fresh,0,package(s),FALSE,1,"spring, fall"
+broccoli,frozen,2,package(s),FALSE,2,n/a
+brussel sprout,fresh,1,package(s),TRUE,1,"fall, winter"
+butter,frozen,1,stick(s),FALSE,1,n/a
+cabbage,fresh,1,ea,TRUE,1,"spring, fall, winter"
+cantaloupe,fresh,0,ea,FALSE,1,summer
+carrot,fresh,10,ea,TRUE,1,n/a
+cashews,shelf stable,2,package(s),FALSE,1,n/a
+cauliflower,fresh,1,ea,TRUE,1,fall
+celery,fresh,1,package(s),TRUE,2,n/a
+cheddar,fresh,2,package(s),FALSE,1,n/a
+cherry,fresh,0,package(s),FALSE,1,summer
+cherry,frozen,0,package(s),FALSE,2,n/a
+chicken,frozen,2,breasts,FALSE,1,n/a
+chickpeas,shelf stable,4,can(s),FALSE,1,n/a
+chips,shelf stable,2,package(s),FALSE,1,n/a
+coconut milk,shelf stable,3,can(s),FALSE,1,n/a
+corn,fresh,0,ea,FALSE,1,summer
+corn,shelf stable,2,can(s),FALSE,1,n/a
+cottage cheese,fresh,0,tub(s),FALSE,1,n/a
+cornbread,shelf stable,0,box(es),FALSE,1,n/a
+crackers,shelf stable,2,box(es),FALSE,1,n/a
+cranberry,shelf stable,1,bag(s),FALSE,1,n/a
+cream,fresh,1,jug(s),FALSE,1,n/a
+cream cheese,fresh,0,box(es),FALSE,1,n/a
+cucumber,fresh,0,ea,FALSE,1,summer
+date,shelf stable,0,bag(s),FALSE,1,n/a
+dumpling,frozen,1,package(s),FALSE,1,n/a
+egg,fresh,10,ea,FALSE,1,n/a
+feta,fresh,2,tub(s),FALSE,1,n/a
+fish,frozen,2,package(s),FALSE,1,n/a
+garlic,fresh,3,ea,FALSE,1,n/a
+ginger,fresh,1,ea,FALSE,1,n/a
+green bean,fresh,0,package(s),FALSE,1,summer
+green bean,frozen,2,package(s),FALSE,2,n/a
+green grape,fresh,0,package(s),FALSE,1,"summer, fall, winter"
+green pea,frozen,2,package(s),FALSE,2,n/a
+grits,shelf stable,1,package(s),FALSE,1,n/a
+ground meat,frozen,2,lb,FALSE,1,n/a
+ground turkey,frozen,1,lb,FALSE,1,n/a
+ham,fresh,0,package(s),FALSE,1,n/a
+kale,fresh,0,package(s),TRUE,1,"spring, winter"
+kidney beans,shelf stable,4,can(s),FALSE,1,n/a
+kiwi,fresh,0,ea,FALSE,1,"spring, winter"
+lemon,fresh,2,ea,FALSE,1,n/a
+lentils,shelf stable,10,package(s),FALSE,1,n/a
+lettuce,fresh,1,ea,TRUE,1,"spring, fall"
+lime,fresh,1,ea,FALSE,1,n/a
+mango,fresh,0,ea,FALSE,1,summer
+mango,frozen,0,package(s),FALSE,2,n/a
+milk,fresh,2,gallon(s),FALSE,1,n/a
+mozzarella,fresh,2,package(s),FALSE,1,n/a
+mushroom,fresh,1,package(s),FALSE,1,n/a
+naan,frozen,1,package(s),FALSE,1,n/a
+noodle,shelf stable,3,package(s),FALSE,1,n/a
+oat,shelf stable,2,package(s),FALSE,1,n/a
+olive,shelf stable,1,jar(s),FALSE,1,n/a
+onion,fresh,4,ea,FALSE,1,n/a
+orange,fresh,10,ea,FALSE,1,winter
+pasta,shelf stable,3,box(es),FALSE,1,n/a
+peach,fresh,0,ea,FALSE,1,summer
+peanut butter,shelf stable,10,jar(s),FALSE,1,n/a
+pear,fresh,10,ea,TRUE,1,"summer, winter"
+pecans,shelf stable,2,package(s),FALSE,1,n/a
+pepper,fresh,3,ea,FALSE,1,"summer, fall"
+pepperoni,fresh,0,package(s),FALSE,1,n/a
+pineapple,fresh,0,ea,FALSE,1,"spring, summer"
+pineapple,shelf stable,2,can(s),FALSE,1,n/a
+pistachios,shelf stable,1,package(s),FALSE,1,n/a
+pita,shelf stable,1,package(s),FALSE,1,n/a
+pizza dough,frozen,2,package(s),FALSE,1,n/a
+plum,fresh,0,ea,FALSE,1,summer
+pomegranate,fresh,1,ea,TRUE,1,winter
+pork,frozen,0,lb,FALSE,1,n/a
+potato,fresh,10,ea,FALSE,1,winter
+prune,shelf stable,0,package(s),FALSE,1,n/a
+pumpkin,shelf stable,2,can(s),FALSE,1,n/a
+purple grape,fresh,0,package(s),FALSE,1,"summer, fall, winter"
+purple onion,fresh,10,ea,FALSE,1,n/a
+quinoa,shelf stable,10,package(s),FALSE,1,n/a
+raisin,shelf stable,1,package(s),FALSE,1,n/a
+ramen,shelf stable,10,package(s),FALSE,1,n/a
+raspberry,fresh,0,package(s),FALSE,1,summer
+red bell pepper,fresh,2,ea,FALSE,1,"summer, fall"
+rice,shelf stable,10,package(s),FALSE,1,n/a
+rice noodles,shelf stable,0,package(s),FALSE,1,n/a
+salmon,fresh,2,ea,FALSE,1,n/a
+sausage,fresh,2,package(s),TRUE,1,n/a
+shrimp,frozen,0,package(s),FALSE,1,n/a
+spinach,fresh,0,package(s),FALSE,1,"spring, fall"
+squash,fresh,1,ea,FALSE,1,summer
+strawberry,fresh,0,package(s),FALSE,1,"spring, summer"
+strawberry,frozen,1,package(s),FALSE,2,n/a
+sweet potato,fresh,10,ea,FALSE,1,"fall, winter"
+tilapia,frozen,0,package(s),FALSE,1,n/a
+tofu,fresh,2,package(s),FALSE,1,n/a
+tomato,fresh,3,ea,TRUE,1,summer
+tomato,shelf stable,4,can(s),FALSE,1,n/a
+tortilla,shelf stable,2,package(s),FALSE,1,n/a
+tuna,shelf stable,10,can(s),FALSE,1,n/a
+turkey,frozen,1,lb,FALSE,1,n/a
+walnuts,shelf stable,2,package(s),FALSE,1,n/a
+watermelon,fresh,0,ea,FALSE,1,summer
+yellow bell pepper,fresh,2,ea,FALSE,1,"summer, fall"
+yellow squash,fresh,0,ea,FALSE,1,summer
+yogurt,fresh,2,tub(s),TRUE,1,n/a
+zucchini,fresh,0,ea,FALSE,1,summer

@@ -1,0 +1,96 @@
+name,category,sub-category,location,expires_soon,season,format,quantity,unit
+almonds,nut,nut,pantry,FALSE,n/a,shelf stable,2,package(s)
+apple,produce,white/brown,fridge,FALSE,n/a,fresh,10,ea
+artichoke,produce,green,pantry,FALSE,n/a,shelf stable,0,jar(s)
+asiago,dairy,cheese,fridge,FALSE,n/a,fresh,2,wedge
+asparagus,produce,green,fridge,FALSE,spring,fresh,0,bundle(s)
+avocado,produce,green,counter,TRUE,"spring, summer, winter",fresh,10,ea
+bacon,protein,meat,fridge,TRUE,n/a,fresh,2,package(s)
+banana,produce,white/brown,counter,FALSE,n/a,fresh,10,ea
+beef,protein,meat,freezer,FALSE,n/a,frozen,0,lb
+black beans,protein,bean,pantry,FALSE,n/a,shelf stable,4,can(s)
+blackberry,produce,blue/purple,fridge,FALSE,"spring, summer",fresh,0,package(s)
+blueberry,produce,blue/purple,fridge,FALSE,"summer, n/a","fresh, frozen",1,package(s)
+broccoli,produce,dark leafy green,freezer,FALSE,"spring, fall, n/a","fresh, frozen",2,package(s)
+brussel sprout,produce,dark leafy green,fridge,TRUE,"fall, winter",fresh,1,package(s)
+butter,dairy,fat,freezer,FALSE,n/a,frozen,1,stick(s)
+cabbage,produce,dark leafy green,fridge,TRUE,"spring, fall, winter",fresh,1,ea
+canteloupe,produce,orange/yellow,fridge,FALSE,summer,fresh,0,ea
+carrot,produce,orange/yellow,fridge,TRUE,n/a,fresh,10,ea
+cashews,nut,nut,pantry,FALSE,n/a,shelf stable,2,package(s)
+cauliflower,produce,white/brown,fridge,TRUE,fall,fresh,1,ea
+celery,produce,green,fridge,TRUE,n/a,fresh,1,package(s)
+cheddar,dairy,cheese,fridge,FALSE,n/a,fresh,2,package(s)
+cherry,produce,red,fridge,FALSE,"summer, n/a","fresh, frozen",0,package(s)
+chicken,protein,meat,freezer,FALSE,n/a,frozen,2,breasts
+chickpeas,protein,bean,pantry,FALSE,n/a,shelf stable,4,can(s)
+chips,carb,tortilla,pantry,FALSE,n/a,shelf stable,2,package(s)
+coconut milk,produce,white/brown,pantry,FALSE,n/a,shelf stable,3,can(s)
+corn,produce,orange/yellow,pantry,FALSE,"summer, n/a",fresh,0,ea
+corn,carb,tortilla,pantry,FALSE,n/a,shelf stable,2,can(s)
+cottage cheese,dairy,cheese,fridge,FALSE,n/a,fresh,0,tub(s)
+crackers,carb,bread,pantry,FALSE,n/a,shelf stable,2,box(es)
+cranberry,produce,red,pantry,FALSE,n/a,shelf stable,1,bag(s)
+cream,dairy,fat,fridge,FALSE,n/a,fresh,1,jug(s)
+cream cheese,dairy,cheese,fridge,FALSE,n/a,fresh,0,box(es)
+cucumber,produce,green,fridge,FALSE,summer,fresh,0,ea
+date,produce,white/brown,pantry,FALSE,n/a,shelf stable,0,bag(s)
+egg,protein,egg,fridge,FALSE,n/a,fresh,10,ea
+feta,dairy,cheese,fridge,FALSE,n/a,fresh,2,tub(s)
+green bean,produce,green,freezer,FALSE,n/a,frozen,2,package(s)
+green grape,produce,green,fridge,FALSE,"summer, fall, winter",fresh,0,package(s)
+green pea,produce,green,freezer,FALSE,n/a,frozen,2,package(s)
+ground turkey,protein,meat,freezer,FALSE,n/a,frozen,1,lb
+kale,produce,dark leafy green,fridge,FALSE,"spring, winter",fresh,0,package(s)
+kidney beans,protein,bean,pantry,FALSE,n/a,shelf stable,4,can(s)
+kiwi,produce,green,fridge,FALSE,"spring, winter",fresh,0,ea
+lentils,protein,bean,pantry,FALSE,n/a,shelf stable,10,package(s)
+lettuce,produce,dark leafy green,fridge,TRUE,"spring, fall",fresh,1,ea
+mango,produce,orange/yellow,freezer,FALSE,n/a,frozen,0,package(s)
+milk,dairy,milk,fridge,FALSE,n/a,fresh,2,gallon(s)
+mozzarella,dairy,cheese,fridge,FALSE,n/a,fresh,2,package(s)
+naan,carb,bread,freezer,FALSE,n/a,fresh,1,package(s)
+olives,produce,blue/purple,pantry,FALSE,n/a,shelf stable,,
+orange bell pepper,produce,orange/yellow,fridge,FALSE,"summer, fall",fresh,2,ea
+orange etc.,produce,orange/yellow,fridge,FALSE,winter,fresh,10,ea
+pasta,carb,noodle,pantry,FALSE,n/a,shelf stable,2,box(es)
+peach etc.,produce,orange/yellow,fridge,FALSE,summer,fresh,0,ea
+peanut butter,nut,nut,pantry,FALSE,n/a,shelf stable,10,jar(s)
+pear,produce,white/brown,counter,TRUE,"summer, winter",fresh,10,ea
+pecans,nut,nut,pantry,FALSE,n/a,shelf stable,2,package(s)
+pepperoni,protein,meat,fridge,FALSE,n/a,fresh,0,package(s)
+pineapple,produce,orange/yellow,counter,FALSE,"spring, summer, n/a","fresh, shelf stable",2,"ea, can(s)"
+pistachios,nut,nut,pantry,FALSE,n/a,shelf stable,1,package(s)
+plum,produce,blue/purple,fridge,FALSE,summer,fresh,0,ea
+pomegranate,produce,red,fridge,TRUE,winter,fresh,1,ea
+pork shoulder,protein,meat,freezer,FALSE,n/a,frozen,0,lb
+potato,produce,white/brown,counter,FALSE,winter,fresh,10,ea
+potato,carb,potato,counter,FALSE,n/a,fresh,10,ea
+prune,produce,blue/purple,fridge,FALSE,n/a,shelf stable,0,package(s)
+pumpkin,produce,orange/yellow,pantry,FALSE,n/a,shelf stable,2,can(s)
+purple grape,produce,blue/purple,fridge,FALSE,"summer, fall, winter",fresh,0,package(s)
+purple onion,produce,blue/purple,counter,FALSE,n/a,fresh,10,ea
+quinoa,carb,rice,pantry,FALSE,n/a,shelf stable,10,package(s)
+raman,carb,noodle,pantry,FALSE,n/a,shelf stable,10,package(s)
+raspberry,produce,red,fridge,FALSE,summer,fresh,0,package(s)
+red bell pepper,produce,red,fridge,FALSE,"summer, fall",fresh,2,ea
+rice,carb,rice,pantry,FALSE,n/a,shelf stable,10,package(s)
+rice noodles,carb,noodle,pantry,FALSE,n/a,shelf stable,0,package(s)
+salmon,protein,fish,fridge,FALSE,n/a,fresh,2,ea
+sandwich bread,carb,bread,counter,TRUE,n/a,fresh,1,loa(f/ves)
+sausage,protein,meat,fridge,TRUE,n/a,fresh,2,package(s)
+spinach,produce,dark leafy green,fridge,FALSE,"spring, fall",fresh,0,package(s)
+strawberry,produce,red,fridge,FALSE,"spring, summer, n/a","fresh, frozen",1,package(s)
+sweet potato,produce,orange/yellow,counter,FALSE,"fall, winter",fresh,10,ea
+sweet potato,carb,potato,counter,FALSE,n/a,fresh,10,ea
+tilapia,protein,fish,freezer,FALSE,n/a,frozen,0,package(s)
+tofu,protein,tofu,fridge,FALSE,n/a,frozen,2,package(s)
+tomatoes,produce,red,counter,FALSE,"summer, n/a","fresh, shelf stable",4,"ea, packages, can(s)"
+tortilla,carb,tortilla,counter,FALSE,n/a,shelf stable,2,package(s)
+tuna,protein,fish,pantry,FALSE,n/a,shelf stable,10,package(s)
+walnuts,nut,nut,pantry,FALSE,n/a,shelf stable,2,package(s)
+watermelon,produce,red,counter,FALSE,summer,fresh,0,ea
+yellow bell pepper,produce,orange/yellow,fridge,FALSE,"summer, fall",fresh,2,ea
+yellow squash,produce,orange/yellow,fridge,FALSE,summer,fresh,0,ea
+yogurt,dairy,yogurt,fridge,TRUE,n/a,fresh,1,tub(s)
+zucchini,produce,green,fridge,FALSE,summer,fresh,0,ea

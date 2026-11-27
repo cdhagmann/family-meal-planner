@@ -1,5 +1,10 @@
 // ============ Main Render ============
 
+// Helper to convert color keys to CSS-safe class names
+function colorToCssClass(color) {
+  return color.replace(/\//g, '_');
+}
+
 function render() {
   const filteredMeals = sortMeals(getFilteredMeals());
   const proteins = getUniqueProteins();
@@ -35,6 +40,7 @@ function renderInventorySidebar() {
   const byLocation = getInventoryByLocation();
   const expiring = getExpiringItems();
   const isDemo = CONFIG.DEMO_MODE;
+  const unusedFlagged = getUnusedFlaggedLeftovers();
   
   return `
     <div class="sidebar-header">
@@ -43,6 +49,30 @@ function renderInventorySidebar() {
     </div>
     
     ${isDemo ? '<div class="demo-badge">Demo Mode</div>' : ''}
+    
+    ${flaggedLeftovers.size > 0 ? `
+      <div class="flagged-section">
+        <h4>🚩 Flagged Leftovers</h4>
+        <ul class="inventory-list">
+          ${[...flaggedLeftovers].map(item => {
+            const isUsed = !unusedFlagged.includes(item);
+            return `
+              <li class="inventory-item flagged ${isUsed ? 'used' : 'unused'}"
+                  onclick="toggleLeftoverFlag('${item}')">
+                <span class="item-name">${item} ${isUsed ? '✓' : ''}</span>
+                <span class="item-action">✕</span>
+              </li>
+            `;
+          }).join('')}
+        </ul>
+        ${unusedFlagged.length > 0 ? `
+          <div class="flagged-warning">⚠️ ${unusedFlagged.length} flagged item(s) not yet used in plan!</div>
+        ` : `
+          <div class="flagged-success">✓ All flagged items used</div>
+        `}
+        <button class="clear-flags-btn" onclick="clearAllLeftoverFlags()">Clear all flags</button>
+      </div>
+    ` : ''}
     
     ${expiring.length > 0 && !expiring.every(i => i.fullyUsed) ? `
       <div class="expiring-section">
@@ -85,13 +115,16 @@ function renderInventoryLocation(title, items) {
     <div class="inventory-location">
       <h4>${title}</h4>
       <ul class="inventory-list">
-        ${items.map(item => `
-          <li class="inventory-item ${item.expires_soon ? 'expiring' : ''} ${item.fullyUsed ? 'fully-used' : ''} ${filters.ingredients.includes(item.name) ? 'selected' : ''} cat-${item.category}"
-              onclick="toggleFilter('ingredient', '${item.name}')">
-            <span class="item-name">${item.name}</span>
-            <span class="item-qty">${item.quantity}</span>
-          </li>
-        `).join('')}
+        ${items.map(item => {
+          const isFlagged = flaggedLeftovers.has(item.name);
+          return `
+            <li class="inventory-item ${item.expires_soon ? 'expiring' : ''} ${item.fullyUsed ? 'fully-used' : ''} ${filters.ingredients.includes(item.name) ? 'selected' : ''} ${isFlagged ? 'flagged' : ''} cat-${item.category}">
+              <span class="item-name" onclick="toggleFilter('ingredient', '${item.name}')">${item.name}</span>
+              <button class="flag-btn ${isFlagged ? 'active' : ''}" onclick="event.stopPropagation(); toggleLeftoverFlag('${item.name}')" title="${isFlagged ? 'Remove flag' : 'Flag for reuse'}">🚩</button>
+              <span class="item-qty">${item.quantity}</span>
+            </li>
+          `;
+        }).join('')}
       </ul>
     </div>
   `;
@@ -112,15 +145,15 @@ function renderGrocerySidebar(groceryList) {
     byCategory[cat].push({ name, qty });
   });
   
-  const categoryOrder = ['protein', 'red', 'orange_yellow', 'green', 'leafy_green', 'blue_purple', 'white_brown', 'carb', 'dairy', 'pantry'];
+  const categoryOrder = ['protein', 'red', 'orange/yellow', 'green', 'leafy_green', 'blue/purple', 'white/brown', 'carb', 'dairy', 'pantry'];
   const categoryNames = {
     protein: '🥩 Protein',
     red: '🔴 Red',
-    orange_yellow: '🟠 Orange/Yellow',
+    'orange/yellow': '🟠 Orange/Yellow',
     green: '🟢 Green',
     leafy_green: '🥬 Leafy Green',
-    blue_purple: '🟣 Blue/Purple',
-    white_brown: '⚪ White/Brown',
+    'blue/purple': '🟣 Blue/Purple',
+    'white/brown': '⚪ White/Brown',
     carb: '🍞 Carbs',
     dairy: '🧀 Dairy',
     pantry: '🥫 Pantry'
@@ -200,7 +233,7 @@ function renderDay(day, dayIndex) {
 function renderDayColorDots(colorCounts) {
   return PRODUCE_COLORS.map(key => {
     const hasColor = colorCounts[key] > 0;
-    return `<div class="day-color-dot ${key} ${hasColor ? 'filled' : 'empty'}" title="${COLOR_NAMES[key]}"></div>`;
+    return `<div class="day-color-dot ${colorToCssClass(key)} ${hasColor ? 'filled' : 'empty'}" title="${COLOR_NAMES[key]}"></div>`;
   }).join('');
 }
 
@@ -240,18 +273,71 @@ function renderWeekSummary(colorCounts) {
     return sum + (day.breakfast ? 1 : 0) + (day.lunch ? 1 : 0) + (day.dinner ? 1 : 0);
   }, 0);
   
+  const proteinCounts = getWeekProteinSubCategoryCounts();
+  const carbCounts = getWeekCarbSubCategoryCounts();
+  
   return `
     <div class="week-summary">
       <div class="summary-label">Week Totals (${totalMeals}/21 meals)</div>
-      <div class="rainbow-tracker">
-        ${PRODUCE_COLORS.map(key => `
-          <div class="color-dot ${key} ${filters.colorsNeeded.includes(key) ? 'needed' : ''}" 
-               onclick="toggleFilter('colorsNeeded', '${key}')"
-               title="${COLOR_NAMES[key]} - Click to filter">
-            ${colorCounts[key]}
-            <span class="color-label">${COLOR_NAMES[key]}</span>
-          </div>
-        `).join('')}
+      
+      <div class="summary-section">
+        <div class="summary-section-label">Rainbow (colors per week)</div>
+        <div class="rainbow-tracker">
+          ${PRODUCE_COLORS.map(key => `
+            <div class="color-dot ${colorToCssClass(key)} ${filters.colorsNeeded.includes(key) ? 'needed' : ''}" 
+                 onclick="toggleFilter('colorsNeeded', '${key}')"
+                 title="${COLOR_NAMES[key]} - Click to filter">
+              ${colorCounts[key]}
+              <span class="color-label">${COLOR_NAMES[key]}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      
+      <div class="summary-section">
+        <div class="summary-section-label">
+          Protein Variety (max 2 each/week)
+          <label class="auto-exclude-toggle">
+            <input type="checkbox" ${filters.autoExcludeProteins ? 'checked' : ''} onchange="toggleAutoExclude('proteins')">
+            Auto-hide at limit
+          </label>
+        </div>
+        <div class="variety-tracker">
+          ${Object.entries(proteinCounts).map(([subCat, count]) => {
+            const isOver = count >= 2;
+            const emoji = { meat: '🥩', fish: '🐟', egg: '🥚', bean: '🫘', tofu: '🥬' }[subCat] || '🍽️';
+            return `
+              <div class="variety-item ${isOver ? 'at-limit' : ''}" title="${subCat}: ${count}/2">
+                <span class="variety-emoji">${emoji}</span>
+                <span class="variety-name">${subCat}</span>
+                <span class="variety-count">${count}/2</span>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+      
+      <div class="summary-section">
+        <div class="summary-section-label">
+          Carb Variety (max 3 each/week)
+          <label class="auto-exclude-toggle">
+            <input type="checkbox" ${filters.autoExcludeCarbs ? 'checked' : ''} onchange="toggleAutoExclude('carbs')">
+            Auto-hide at limit
+          </label>
+        </div>
+        <div class="variety-tracker">
+          ${Object.entries(carbCounts).map(([subCat, count]) => {
+            const isOver = count >= 3;
+            const emoji = { bread: '🍞', noodle: '🍜', rice: '🍚', tortilla: '🌮', potato: '🥔' }[subCat] || '🍽️';
+            return `
+              <div class="variety-item ${isOver ? 'at-limit' : ''}" title="${subCat}: ${count}/3">
+                <span class="variety-emoji">${emoji}</span>
+                <span class="variety-name">${subCat}</span>
+                <span class="variety-count">${count}/3</span>
+              </div>
+            `;
+          }).join('')}
+        </div>
       </div>
     </div>
   `;
@@ -312,6 +398,14 @@ function renderFilters(proteins, cuisines) {
   
   return `
     <div class="filters">
+      <div class="filter-section">
+        <h3>Sort By</h3>
+        <div class="filter-options">
+          <button class="filter-btn ${sortBy === 'alpha' ? 'active' : ''}" onclick="setSortBy('alpha')">A-Z</button>
+          <button class="filter-btn ${sortBy === 'spoons-asc' ? 'active' : ''}" onclick="setSortBy('spoons-asc')">🥄 Easiest</button>
+          <button class="filter-btn ${sortBy === 'spoons-desc' ? 'active' : ''}" onclick="setSortBy('spoons-desc')">🥄 Hardest</button>
+        </div>
+      </div>
       <div class="filter-section">
         <h3>Protein</h3>
         <div class="filter-options">
@@ -388,14 +482,23 @@ function renderMealCard(meal) {
   const hasExpiring = hasExpiringIngredients(meal.name);
   const neededColorCount = filters.colorsNeeded.filter(c => colors[c]).length;
   const isRecommended = neededColorCount > 0;
+  const ingredients = getMealIngredients(meal.name);
   
   const clickHandler = selectedSlot 
     ? `addMealToSlot(${JSON.stringify(meal).replace(/'/g, "&#39;")})`
     : `alert('Click a meal slot in the week plan first')`;
   
+  // Build tooltip with ingredients
+  const ingredientList = ingredients.length > 0 ? ingredients.join(', ') : 'No ingredients listed';
+  const tooltip = `Ingredients: ${ingredientList}`;
+  
+  // Spoon display (show as emoji string)
+  const spoonDisplay = '🥄'.repeat(Math.min(meal.spoons, 10));
+  
   return `
     <div class="meal-card ${isInPlan ? 'selected' : ''} ${isRecommended ? 'recommended' : ''} ${hasExpiring ? 'has-expiring' : ''} ${selectedSlot ? 'clickable' : 'disabled'}" 
-         onclick='${clickHandler}'>
+         onclick='${clickHandler}'
+         title="${tooltip}">
       ${hasExpiring ? '<div class="expiring-indicator" title="Uses expiring ingredients">⚠️</div>' : ''}
       <h3>${meal.name}</h3>
       <div class="meta">
@@ -404,6 +507,7 @@ function renderMealCard(meal) {
         <span class="tag format">${meal.format}</span>
         ${carbs.map(c => `<span class="tag carb">${c}</span>`).join('')}
       </div>
+      <div class="spoons" title="Effort: ${meal.spoons}/10">${spoonDisplay}</div>
       <div class="colors">
         ${renderColorDots(colors)}
       </div>
@@ -416,7 +520,7 @@ function renderColorDots(colors) {
   if (!colors) return '';
   return Object.entries(colors)
     .filter(([_, hasColor]) => hasColor)
-    .map(([color]) => `<div class="mini-dot ${color}" title="${COLOR_NAMES[color]}"></div>`)
+    .map(([color]) => `<div class="mini-dot ${colorToCssClass(color)}" title="${COLOR_NAMES[color]}"></div>`)
     .join('');
 }
 

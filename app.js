@@ -1,6 +1,7 @@
 // ============ App State ============
 let meals = [];
-let inventory = {};  // Map: ingredient -> {category, location, quantity, expires_soon}
+let ingredients = {};  // Map: ingredient name -> array of {category, sub_category, location}
+let inventory = {};    // Map: ingredient name -> array of {format, quantity, unit, expires_soon, min_usage, season}
 let weekPlan = loadWeekPlan();
 let selectedSlot = null;
 let filters = {
@@ -10,7 +11,51 @@ let filters = {
   colorsNeeded: [],
   expiringOnly: false,
   ingredients: [],  // Filter by specific ingredients (multi-select)
+  autoExcludeProteins: true,  // Auto-exclude protein sub-cats at limit
+  autoExcludeCarbs: true,     // Auto-exclude carb sub-cats at limit
 };
+let sortBy = 'alpha';  // 'alpha', 'spoons-asc', 'spoons-desc'
+let flaggedLeftovers = loadFlaggedLeftovers();  // Set of ingredient names flagged for reuse
+
+// ============ Leftover Flagging ============
+
+function loadFlaggedLeftovers() {
+  try {
+    const saved = localStorage.getItem('flaggedLeftovers');
+    if (saved) {
+      return new Set(JSON.parse(saved));
+    }
+  } catch (e) {
+    console.error('Failed to load flagged leftovers:', e);
+  }
+  return new Set();
+}
+
+function saveFlaggedLeftovers() {
+  localStorage.setItem('flaggedLeftovers', JSON.stringify([...flaggedLeftovers]));
+}
+
+function toggleLeftoverFlag(ingredientName) {
+  if (flaggedLeftovers.has(ingredientName)) {
+    flaggedLeftovers.delete(ingredientName);
+  } else {
+    flaggedLeftovers.add(ingredientName);
+  }
+  saveFlaggedLeftovers();
+  render();
+}
+
+function clearAllLeftoverFlags() {
+  flaggedLeftovers.clear();
+  saveFlaggedLeftovers();
+  render();
+}
+
+function getUnusedFlaggedLeftovers() {
+  // Returns flagged ingredients that aren't used in any planned meal
+  const usage = getIngredientUsage();
+  return [...flaggedLeftovers].filter(ing => !usage[ing] || usage[ing] === 0);
+}
 
 // ============ Week Plan Management ============
 
@@ -68,17 +113,17 @@ async function loadAllData(forceRefresh = false) {
     
     // Use fallback data in demo mode, otherwise fetch from Google Sheets
     const mealsUrl = CONFIG.DEMO_MODE ? CONFIG.FALLBACK.meals : CONFIG.SHEETS.meals;
+    const ingredientsUrl = CONFIG.DEMO_MODE ? CONFIG.FALLBACK.ingredients : CONFIG.SHEETS.ingredients;
     const inventoryUrl = CONFIG.DEMO_MODE ? CONFIG.FALLBACK.inventory : CONFIG.SHEETS.inventory;
-    const fallbackMeals = CONFIG.DEMO_MODE ? null : CONFIG.FALLBACK.meals;
-    const fallbackInventory = CONFIG.DEMO_MODE ? null : CONFIG.FALLBACK.inventory;
     
-    // Fetch both CSVs in parallel
-    const [mealsCSV, inventoryCSV] = await Promise.all([
-      fallbackMeals ? fetchCSV(mealsUrl, fallbackMeals) : fetchCSV(mealsUrl, mealsUrl),
-      fallbackInventory ? fetchCSV(inventoryUrl, fallbackInventory) : fetchCSV(inventoryUrl, inventoryUrl),
+    // Fetch all CSVs in parallel
+    const [mealsCSV, ingredientsCSV, inventoryCSV] = await Promise.all([
+      fetchCSV(mealsUrl, CONFIG.FALLBACK.meals),
+      fetchCSV(ingredientsUrl, CONFIG.FALLBACK.ingredients),
+      fetchCSV(inventoryUrl, CONFIG.FALLBACK.inventory),
     ]);
 
-    // Parse meals (now includes ingredients column)
+    // Parse meals
     Papa.parse(mealsCSV, {
       header: true,
       skipEmptyLines: true,
@@ -92,13 +137,35 @@ async function loadAllData(forceRefresh = false) {
             meal_type: row.meal_type || '',
             red_flags: row.red_flags || '',
             green_flags: row.green_flags || '',
-            // Parse comma-separated ingredients into array
+            spoons: parseInt(row.spoons) || 5,  // Default to 5 if not set
             ingredients: parseIngredients(row.ingredients || '')
           }));
       }
     });
 
-    // Parse inventory
+    // Parse ingredients (reference data - can have multiple rows per ingredient for dual-category items)
+    Papa.parse(ingredientsCSV, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (results) => {
+        ingredients = {};
+        results.data.forEach(row => {
+          if (row.name) {
+            const name = row.name.trim().toLowerCase();
+            if (!ingredients[name]) {
+              ingredients[name] = [];
+            }
+            ingredients[name].push({
+              category: row.category || 'pantry',
+              sub_category: row.sub_category || '',
+              location: row.location || 'pantry'
+            });
+          }
+        });
+      }
+    });
+
+    // Parse inventory (stock tracking - can have multiple rows per ingredient for different formats)
     Papa.parse(inventoryCSV, {
       header: true,
       skipEmptyLines: true,
@@ -106,12 +173,18 @@ async function loadAllData(forceRefresh = false) {
         inventory = {};
         results.data.forEach(row => {
           if (row.name) {
-            inventory[row.name.trim().toLowerCase()] = {
-              category: row.category || 'pantry',
-              location: row.location || 'pantry',
+            const name = row.name.trim().toLowerCase();
+            if (!inventory[name]) {
+              inventory[name] = [];
+            }
+            inventory[name].push({
+              format: row.format || 'fresh',
               quantity: parseInt(row.quantity) || 0,
-              expires_soon: row.expires_soon === 'TRUE' || row.expires_soon === 'true'
-            };
+              unit: row.unit || 'ea',
+              expires_soon: row.expires_soon === 'TRUE' || row.expires_soon === 'true' || row.expires_soon === true,
+              min_usage: parseInt(row.min_usage) || 1,
+              season: row.season || 'n/a'
+            });
           }
         });
       }
@@ -120,7 +193,7 @@ async function loadAllData(forceRefresh = false) {
     // Save to cache
     saveToCache();
     
-    console.log(`Loaded: ${meals.length} meals, ${Object.keys(inventory).length} inventory items`);
+    console.log(`Loaded: ${meals.length} meals, ${Object.keys(ingredients).length} ingredients, ${Object.keys(inventory).length} inventory items`);
     render();
     
   } catch (error) {
@@ -137,12 +210,13 @@ function parseIngredients(ingredientsStr) {
 }
 
 // Cache version - increment when data structure changes
-const CACHE_VERSION = 2;
+const CACHE_VERSION = 3;
 
 function saveToCache() {
   const data = { 
     version: CACHE_VERSION,
-    meals, 
+    meals,
+    ingredients,
     inventory 
   };
   localStorage.setItem(CONFIG.STORAGE.cachedData, JSON.stringify(data));
@@ -217,26 +291,99 @@ function getMealIngredients(mealName) {
   return meal ? meal.ingredients : [];
 }
 
+// Get all category info for an ingredient (can be multiple for dual-category items like corn)
+function getIngredientCategories(ingredientName) {
+  return ingredients[ingredientName.toLowerCase()] || [{ category: 'pantry', sub_category: '', location: 'pantry' }];
+}
+
+// Get the primary location for an ingredient (from ingredients.csv)
+function getIngredientLocation(ingredientName) {
+  const cats = getIngredientCategories(ingredientName);
+  return cats[0]?.location || 'pantry';
+}
+
+// Get all inventory entries for an ingredient (can be multiple formats: fresh, frozen, canned)
+function getIngredientInventory(ingredientName) {
+  return inventory[ingredientName.toLowerCase()] || [];
+}
+
+// Get the best available format for an ingredient (fresh in season > frozen > canned > shelf stable)
+function getBestInventoryFormat(ingredientName) {
+  const entries = getIngredientInventory(ingredientName);
+  if (entries.length === 0) return null;
+  
+  // Filter to formats with quantity > 0
+  const available = entries.filter(e => e.quantity > 0);
+  if (available.length === 0) return null;
+  
+  // Priority: fresh (if in season) > frozen > shelf stable
+  const fresh = available.find(e => e.format === 'fresh');
+  if (fresh) {
+    // Check if in season
+    const seasons = fresh.season.split(',').map(s => s.trim().toLowerCase());
+    if (seasons.includes('n/a') || seasons.includes(CURRENT_SEASON)) {
+      return fresh;
+    }
+  }
+  
+  const frozen = available.find(e => e.format === 'frozen');
+  if (frozen) return frozen;
+  
+  const shelf = available.find(e => e.format === 'shelf stable');
+  if (shelf) return shelf;
+  
+  // Return first available if no priority match
+  return available[0];
+}
+
+// Get total quantity across all formats
+function getTotalQuantity(ingredientName) {
+  const entries = getIngredientInventory(ingredientName);
+  return entries.reduce((sum, e) => sum + e.quantity, 0);
+}
+
+// Check if any format is expiring soon
+function isExpiringSoon(ingredientName) {
+  const entries = getIngredientInventory(ingredientName);
+  return entries.some(e => e.expires_soon && e.quantity > 0);
+}
+
+// Legacy compatibility: get combined info (for existing code that expects old structure)
 function getIngredientInfo(ingredientName) {
-  return inventory[ingredientName.toLowerCase()] || { category: 'pantry', location: 'pantry', quantity: 0, expires_soon: false };
+  const cats = getIngredientCategories(ingredientName);
+  const bestFormat = getBestInventoryFormat(ingredientName);
+  
+  return {
+    category: cats[0]?.category || 'pantry',
+    sub_category: cats[0]?.sub_category || '',
+    location: cats[0]?.location || 'pantry',
+    quantity: getTotalQuantity(ingredientName),
+    expires_soon: isExpiringSoon(ingredientName),
+    // All categories this ingredient belongs to (for dual-category items)
+    allCategories: cats
+  };
 }
 
 function getMealColors(mealName) {
   const colors = {
     red: false,
-    orange_yellow: false,
+    'orange/yellow': false,
     green: false,
     leafy_green: false,
-    blue_purple: false,
-    white_brown: false
+    'blue/purple': false,
+    'white/brown': false
   };
   
   const ings = getMealIngredients(mealName);
   ings.forEach(ing => {
-    const info = getIngredientInfo(ing);
-    if (PRODUCE_COLORS.includes(info.category)) {
-      colors[info.category] = true;
-    }
+    // Check ALL categories for this ingredient (handles dual-category items)
+    const allCats = getIngredientCategories(ing);
+    allCats.forEach(catInfo => {
+      // Check if sub_category is a produce color
+      if (PRODUCE_COLORS.includes(catInfo.sub_category)) {
+        colors[catInfo.sub_category] = true;
+      }
+    });
   });
   
   return colors;
@@ -246,8 +393,9 @@ function getMealProteins(mealName) {
   const ings = getMealIngredients(mealName);
   const proteins = [];
   ings.forEach(ing => {
-    const info = getIngredientInfo(ing);
-    if (info.category === 'protein' && ing !== 'vegetarian') {
+    const allCats = getIngredientCategories(ing);
+    // Check if any category entry is protein
+    if (allCats.some(c => c.category === 'protein') && ing !== 'vegetarian') {
       proteins.push(ing);
     }
   });
@@ -258,8 +406,9 @@ function getMealCarbs(mealName) {
   const ings = getMealIngredients(mealName);
   const carbs = [];
   ings.forEach(ing => {
-    const info = getIngredientInfo(ing);
-    if (info.category === 'carb') {
+    const allCats = getIngredientCategories(ing);
+    // Check if any category entry is carb
+    if (allCats.some(c => c.category === 'carb')) {
       carbs.push(ing);
     }
   });
@@ -281,10 +430,86 @@ function hasExpiringIngredients(mealName) {
   });
 }
 
+// ============ Nutrition Tracking ============
+
+// Get protein sub-category for an ingredient
+function getProteinSubCategory(ingredientName) {
+  const cats = getIngredientCategories(ingredientName);
+  const proteinCat = cats.find(c => c.category === 'protein');
+  return proteinCat ? proteinCat.sub_category : null;
+}
+
+// Get carb sub-category for an ingredient
+function getCarbSubCategory(ingredientName) {
+  const cats = getIngredientCategories(ingredientName);
+  const carbCat = cats.find(c => c.category === 'carb');
+  return carbCat ? carbCat.sub_category : null;
+}
+
+// Count protein sub-categories used in week plan
+function getWeekProteinSubCategoryCounts() {
+  const counts = { meat: 0, fish: 0, egg: 0, bean: 0, tofu: 0 };
+  
+  weekPlan.forEach(day => {
+    MEAL_SLOTS.forEach(slot => {
+      const meal = day[slot];
+      if (meal) {
+        const proteins = getMealProteins(meal.name);
+        const seenSubCats = new Set();  // Don't double-count same sub-cat in one meal
+        proteins.forEach(p => {
+          const subCat = getProteinSubCategory(p);
+          if (subCat && counts.hasOwnProperty(subCat) && !seenSubCats.has(subCat)) {
+            counts[subCat]++;
+            seenSubCats.add(subCat);
+          }
+        });
+      }
+    });
+  });
+  
+  return counts;
+}
+
+// Count carb sub-categories used in week plan
+function getWeekCarbSubCategoryCounts() {
+  const counts = { bread: 0, noodle: 0, rice: 0, tortilla: 0, potato: 0 };
+  
+  weekPlan.forEach(day => {
+    MEAL_SLOTS.forEach(slot => {
+      const meal = day[slot];
+      if (meal) {
+        const ings = getMealIngredients(meal.name);
+        const seenSubCats = new Set();  // Don't double-count same sub-cat in one meal
+        ings.forEach(ing => {
+          const subCat = getCarbSubCategory(ing);
+          if (subCat && counts.hasOwnProperty(subCat) && !seenSubCats.has(subCat)) {
+            counts[subCat]++;
+            seenSubCats.add(subCat);
+          }
+        });
+      }
+    });
+  });
+  
+  return counts;
+}
+
+// Check if protein sub-category is at or over limit (2 per week)
+function isProteinSubCategoryOverLimit(subCat) {
+  const counts = getWeekProteinSubCategoryCounts();
+  return counts[subCat] >= 2;
+}
+
+// Check if carb sub-category is at or over limit (3 per week)
+function isCarbSubCategoryOverLimit(subCat) {
+  const counts = getWeekCarbSubCategoryCounts();
+  return counts[subCat] >= 3;
+}
+
 // ============ Color Counting ============
 
 function getColorCountsForDay(dayIndex) {
-  const counts = { red: 0, orange_yellow: 0, green: 0, leafy_green: 0, blue_purple: 0, white_brown: 0 };
+  const counts = { red: 0, 'orange/yellow': 0, green: 0, leafy_green: 0, 'blue/purple': 0, 'white/brown': 0 };
   const day = weekPlan[dayIndex];
   
   MEAL_SLOTS.forEach(slot => {
@@ -301,7 +526,7 @@ function getColorCountsForDay(dayIndex) {
 }
 
 function getColorCountsForWeek() {
-  const counts = { red: 0, orange_yellow: 0, green: 0, leafy_green: 0, blue_purple: 0, white_brown: 0 };
+  const counts = { red: 0, 'orange/yellow': 0, green: 0, leafy_green: 0, 'blue/purple': 0, 'white/brown': 0 };
   
   weekPlan.forEach((day, dayIndex) => {
     const dayCounts = getColorCountsForDay(dayIndex);
@@ -375,6 +600,10 @@ function getUniqueCuisines() {
 }
 
 function getFilteredMeals() {
+  // Get current limits for auto-exclude
+  const proteinCounts = getWeekProteinSubCategoryCounts();
+  const carbCounts = getWeekCarbSubCategoryCounts();
+  
   return meals.filter(meal => {
     // Meal type filter
     if (filters.mealType !== 'all' && meal.meal_type !== filters.mealType) return false;
@@ -403,29 +632,54 @@ function getFilteredMeals() {
       if (!filters.ingredients.every(fi => ings.includes(fi))) return false;
     }
     
+    // Auto-exclude proteins at limit (2 per sub-category)
+    if (filters.autoExcludeProteins) {
+      const mealProteins = getMealProteins(meal.name);
+      for (const p of mealProteins) {
+        const subCat = getProteinSubCategory(p);
+        if (subCat && proteinCounts[subCat] >= 2) {
+          return false;  // This meal uses a protein sub-cat that's at limit
+        }
+      }
+    }
+    
+    // Auto-exclude carbs at limit (3 per sub-category)
+    if (filters.autoExcludeCarbs) {
+      const ings = getMealIngredients(meal.name);
+      for (const ing of ings) {
+        const subCat = getCarbSubCategory(ing);
+        if (subCat && carbCounts[subCat] >= 3) {
+          return false;  // This meal uses a carb sub-cat that's at limit
+        }
+      }
+    }
+    
     return true;
   });
 }
 
 function sortMeals(filteredMeals) {
   return [...filteredMeals].sort((a, b) => {
-    // Prioritize meals with expiring ingredients
+    // Prioritize meals with expiring ingredients (always first, regardless of sort)
     const aExpiring = hasExpiringIngredients(a.name);
     const bExpiring = hasExpiringIngredients(b.name);
     if (aExpiring && !bExpiring) return -1;
     if (!aExpiring && bExpiring) return 1;
     
-    // Then by color match count if filtering by colors
-    if (filters.colorsNeeded.length > 0) {
-      const aColors = getMealColors(a.name);
-      const bColors = getMealColors(b.name);
-      const aScore = filters.colorsNeeded.filter(c => aColors[c]).length;
-      const bScore = filters.colorsNeeded.filter(c => bColors[c]).length;
-      if (bScore !== aScore) return bScore - aScore;
+    // Apply the user's selected sort method as PRIMARY sort
+    if (sortBy === 'spoons-asc') {
+      if (a.spoons !== b.spoons) return a.spoons - b.spoons;
+    } else if (sortBy === 'spoons-desc') {
+      if (a.spoons !== b.spoons) return b.spoons - a.spoons;
     }
-    
-    return 0;
+    // For 'alpha' or as tie-breaker, use alphabetical
+    return a.name.localeCompare(b.name);
   });
+}
+
+function setSortBy(sort) {
+  sortBy = sort;
+  render();
 }
 
 // ============ Inventory Helpers ============
@@ -461,22 +715,34 @@ function getInventoryByLocation() {
   
   const usage = getIngredientUsage();
   
-  Object.entries(inventory).forEach(([name, data]) => {
-    if (data.quantity > 0 && data.location !== 'SKIP') {
-      const location = data.location || 'pantry';
-      const needed = usage[name] || 0;
-      const fullyUsed = needed >= data.quantity;
-      
-      if (byLocation[location]) {
-        byLocation[location].push({
-          name,
-          quantity: data.quantity,
-          expires_soon: data.expires_soon,
-          category: data.category,
-          needed,
-          fullyUsed
-        });
-      }
+  // Iterate through all inventory items
+  Object.entries(inventory).forEach(([name, formats]) => {
+    // Get the ingredient's location from ingredients.csv
+    const location = getIngredientLocation(name);
+    
+    // Get total quantity across all formats
+    const totalQty = formats.reduce((sum, f) => sum + f.quantity, 0);
+    if (totalQty <= 0) return;
+    
+    // Check if any format is expiring
+    const expiring = formats.some(f => f.expires_soon && f.quantity > 0);
+    
+    // Get category info
+    const cats = getIngredientCategories(name);
+    const category = cats[0]?.sub_category || cats[0]?.category || 'pantry';
+    
+    const needed = usage[name] || 0;
+    const fullyUsed = needed >= totalQty;
+    
+    if (byLocation[location]) {
+      byLocation[location].push({
+        name,
+        quantity: totalQty,
+        expires_soon: expiring,
+        category: category,
+        needed,
+        fullyUsed
+      });
     }
   });
   
@@ -494,14 +760,21 @@ function getInventoryByLocation() {
 
 function getExpiringItems() {
   const usage = getIngredientUsage();
+  const expiring = [];
   
-  return Object.entries(inventory)
-    .filter(([name, data]) => data.expires_soon && data.quantity > 0 && data.location !== 'SKIP')
-    .map(([name, data]) => {
-      const needed = usage[name] || 0;
-      const fullyUsed = needed >= data.quantity;
-      return { name, quantity: data.quantity, needed, fullyUsed };
-    });
+  Object.entries(inventory).forEach(([name, formats]) => {
+    // Check if any format is expiring with quantity > 0
+    const expiringFormats = formats.filter(f => f.expires_soon && f.quantity > 0);
+    if (expiringFormats.length === 0) return;
+    
+    const totalQty = formats.reduce((sum, f) => sum + f.quantity, 0);
+    const needed = usage[name] || 0;
+    const fullyUsed = needed >= totalQty;
+    
+    expiring.push({ name, quantity: totalQty, needed, fullyUsed });
+  });
+  
+  return expiring;
 }
 
 // ============ User Actions ============
@@ -542,6 +815,12 @@ function addMealToSlot(meal) {
   if (selectedSlot) {
     weekPlan[selectedSlot.day][selectedSlot.slot] = meal;
     saveWeekPlan();
+    
+    // Clear include filters (proteins, cuisines, ingredients) but keep exclude filters
+    filters.proteins = [];
+    filters.cuisines = [];
+    filters.ingredients = [];
+    filters.expiringOnly = false;
     
     const nextSlot = findNextEmptySlot(selectedSlot.day, selectedSlot.slot);
     selectedSlot = nextSlot;
@@ -594,8 +873,26 @@ function clearWeek() {
   }
 }
 
+function toggleAutoExclude(type) {
+  if (type === 'proteins') {
+    filters.autoExcludeProteins = !filters.autoExcludeProteins;
+  } else if (type === 'carbs') {
+    filters.autoExcludeCarbs = !filters.autoExcludeCarbs;
+  }
+  render();
+}
+
 function clearFilters() {
-  filters = { mealType: 'all', proteins: [], cuisines: [], colorsNeeded: [], expiringOnly: false, ingredients: [] };
+  filters = { 
+    mealType: 'all', 
+    proteins: [], 
+    cuisines: [], 
+    colorsNeeded: [], 
+    expiringOnly: false, 
+    ingredients: [],
+    autoExcludeProteins: true,
+    autoExcludeCarbs: true
+  };
   render();
 }
 
